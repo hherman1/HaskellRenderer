@@ -4,6 +4,7 @@ module Render
 	Area(..),
 	Screen,
 	Output,
+	project,
 	initRenderable,
 	renderFile,
 	renderLineMatrix,
@@ -23,6 +24,17 @@ type Output = Area
 
 type Point a = (a,a)
 type Color a = (a,a,a)
+
+
+--POST--
+
+project :: Matrix m => (Float,Float,Float) -> [m Float] -> [m Float]
+project (ex,ey,ez) m = map (Matrix.fromList . transpose' . (map ((\(x,y,z) -> [x,y,z,1]) . (\(x:y:z:_)->Parse.perspective (ex,ey,ez) (x,y,z))) .  Matrix.rows)) m
+
+perspective (ex,ey,ez) (px,py,pz) = (ex - (ez * (px-ex)/(pz-ez)), ey - (ez *(py-ey)/(pz-ez)), 0)
+
+
+-------------------
 
 
 initRenderable :: (Matrix m,Num a) => Screen a -> Output a -> Color a -> Renderable m a

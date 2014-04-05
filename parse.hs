@@ -98,38 +98,5 @@ parse l buffer@(Renderable scr out col edge mls mtri)
 		readFloats src = map read . map (\(a:as) -> case a of '.' -> '0':a:as; '-' -> a:'0':as; _ -> a:as) $ src ::[Float]
 
 -- Functions
-project :: Matrix m => (Float,Float,Float) -> [m Float] -> [m Float]
-project (ex,ey,ez) m = map (Matrix.fromList . transpose' . (map ((\(x,y,z) -> [x,y,z,1]) . (\(x:y:z:_)->Parse.perspective (ex,ey,ez) (x,y,z))) .  Matrix.rows)) m
-
-perspective (ex,ey,ez) (px,py,pz) = (ex - (ez * (px-ex)/(pz-ez)), ey - (ez *(py-ey)/(pz-ez)), 0)
 
 line x1 y1 z1 x2 y2 z2 = fromList $ [[x1,x2],[y1,y2],[z1,z2],[1,1]]
-
-sphere :: (Matrix m) => Float -> Int -> [m Float]
-sphere r divs = connectArcs $ genRotations divs $ arc r divs
-	where 
-		genRotations divs = take (1 + divs) . iterate ((flip matrixProduct) (rotateY $ 360 / fromIntegral divs) . transpose)
-		connectArcs :: (Matrix m) => [m Float] -> [m Float]
-		--connectArcs arcs = let arc = map rows arcs in (concat $ map (fromList) $ Matrix.transpose' arc) ++ (concat $ map fromList . map Matrix.transpose' . Matrix.transpose' $ arc) -- (concat $ map traceMatrix $ Matrix.transpose' arcs) -- zipWith (map traceMatrix) arcs (drop 1 arcs))
-		connectArcs arcs = let arc = map rows arcs in (concat $ map traceMatrix arcs) ++ (concat $ zipWith (zipWith (\a b -> Matrix.fromList . transpose' $ [a,b])) arc (drop 1 arc))
-		traceMatrix m = let mr = rows m in zipWith (\a b -> Matrix.fromList . Matrix.transpose' $ [a,b]) mr (drop 1 mr) 
-
-arc r divs = fromList $ transpose' [ [r * cos (qu * 2 * pi / fromIntegral divs), r * sin (qu * 2 * pi / fromIntegral divs), 0, 1 ] | t <- [1..divs], let qu = fromIntegral t]
-
-move :: (Matrix m) => Float -> Float -> Float -> m Float
-move a b c = fromList $ [[1.0,0,0,a],[0,1.0,0,b],[0,0,1.0,c],[0,0,0,1.0]]
-
-scale :: (Matrix m) => Float -> Float -> Float -> m Float
-scale x y z = fromList $ [[x,0,0,1],[0,y,0,1],[0,0,z,1],[0,0,0,1]]
-
-rotateX :: (Matrix m) => Float -> m Float
-rotateX deg = let a = toRad deg in fromList $ [[1.0,0,0,0],[0,cos a, (sin a),0],[0,(-sin a),cos a, 0],[0,0,0,1.0]]
-
-rotateY :: (Matrix m) => Float -> m Float
-rotateY deg = let a = toRad deg in fromList $ [[cos a,0,(sin a),0],[0,1,0,0],[(-sin a),0,cos a,0],[0,0,0,1]]
-
-rotateZ :: (Matrix m) => Float -> m Float
-rotateZ deg = let a = toRad deg in fromList $ [[cos a,(sin a),0,0],[(-sin a),cos a,0,0],[0,0,1,0],[0,0,0,1]]
-
-toRad :: Float -> Float
-toRad t = t * pi / 180
