@@ -11,9 +11,9 @@ see the *examples* directory for command files
 
 Use the `parse` command to type in your own commands	
 
-     `parse`
+     parse
 
 Use the `read` command to read a file
 
-    `read examples/parCube.dat`
+    read examples/parCube.dat
 
