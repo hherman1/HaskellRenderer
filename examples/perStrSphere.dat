@@ -1,0 +1,10 @@
+# sphere
+identity
+screen -3 -3 3 3
+sphere 2 0 0 0
+rotate-x -60
+move 0 0 -5
+transform
+render-perspective-stereo -1.25 0 10 1.25 0 10
+file sphere.ppm
+end
