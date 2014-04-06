@@ -4,7 +4,7 @@ module Render
 	Area(..),
 	Screen,
 	Output,
-	project,
+	project, 
 	initRenderable,
 	renderFile,
 	renderLineMatrix,
@@ -29,7 +29,7 @@ type Color a = (a,a,a)
 --POST--
 
 project :: Matrix m => (Float,Float,Float) -> [m Float] -> [m Float]
-project (ex,ey,ez) m = map (Matrix.fromList . transpose' . (map ((\(x,y,z) -> [x,y,z,1]) . (\(x:y:z:_)->Parse.perspective (ex,ey,ez) (x,y,z))) .  Matrix.rows)) m
+project (ex,ey,ez) m = map (Matrix.fromList . (map ((\(x,y,z) -> [x,y,z,1]) . (\(x:y:z:_)->perspective (ex,ey,ez) (x,y,z))) .  Matrix.rows)) m
 
 perspective (ex,ey,ez) (px,py,pz) = (ex - (ez * (px-ex)/(pz-ez)), ey - (ez *(py-ey)/(pz-ez)), 0)
 
@@ -48,6 +48,10 @@ renderFile buffer@(Renderable scr out col edge mls mtri) = pixelsGridOM (wh out)
 		integralize :: (Integral a,RealFrac b) => (a,a,(b,b,b)) -> (a,a,(a,a,a))
 		integralize (x,y,(r,g,b)) = (x,y,(truncate r,truncate g,truncate b))
 
+--Triangles
+
+triToLine :: (Matrix m) => m Float -> [m Float]
+triToLine mat = let tri = rows mat in zipWith (\a b -> fromList $ [a,b]) tri $ cycle (drop 1 tri)
 
 --renderLineMatrix :: (Matrix m,RealFrac a,Integral b) => [m a] -> Area a -> Area a -> (b,b,b) -> [(b,b,(b,b,b))]
 renderLineMatrix :: (Matrix m, RealFrac a, Ord a, Integral b) => Renderable m a -> [(b,b,(a,a,a))]

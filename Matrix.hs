@@ -14,6 +14,7 @@ module Matrix
 	identity,
 	matrixProduct,
 	dotProduct,
+	format,
 	horizontalMatrix
 	)
 where
@@ -51,18 +52,23 @@ instance Matrix ListMatrix where
 	rows (MatrixV _ _ dat) = transpose' dat
 	rows (MatrixH _ _ dat) = dat
 
-	transpose m@(MatrixH r c dat) = MatrixV c r $ transpose' dat
-	transpose m@(MatrixV r c dat) = MatrixH c r $ transpose' dat
 
-	fromList dat@(d:_) = MatrixV (length d) (length dat) dat
+	transpose m@(MatrixH r c dat) = MatrixH c r $ transpose' dat
+	transpose m@(MatrixV r c dat) = MatrixV c r $ transpose' dat
+
+	fromList dat@(d:_) = MatrixH (length dat) (length d) dat
 
 	toList (MatrixV _ _ dat) = dat
 	toList (MatrixH _ _ dat) = dat
 
 	identity r c = MatrixH r c [[if x==y then 1 else 0 | x<- [1..c]]| y <- [1..r]]
 
-	matrixProduct mH@(MatrixH r _ dH) mV@(MatrixV _ c dV) = MatrixV r c $ matrixByMatrix dH dV
-	matrixProduct mH@(MatrixH _ _ _) mH2@(MatrixH _ _ _) = matrixProduct mH $ transpose mH2
+	matrixProduct mH@(MatrixH r a dH) mV@(MatrixV b c dV) 
+		| a == b = MatrixV r c $ matrixByMatrix dH dV
+		| otherwise = error $ "The columns of matrix A:" ++ show a ++ " must equal the rows of matrix B:" ++ show b
+	matrixProduct mH@(MatrixH _ _ _) mH2@(MatrixH _ _ _) = matrixProduct mH $ format mH2
+	matrixProduct mV@(MatrixV _ _ _) mV2@(MatrixV _ _ _) = matrixProduct (format mV) mV2
+	matrixProduct mV@(MatrixV _ _ _) mV2@(MatrixH _ _ _) = matrixProduct (format mV) (format mV2)
 	matrixProduct mV mO = error $ "Uh oh, cant multiply these two. A : " ++ show (horizontalMatrix mV) ++ " B : " ++ show (horizontalMatrix mO) -- ++ "\nA : \n" ++ show mV ++ "\nB: \n" ++ show mO
 
 --instance Matrix ListMatrix
@@ -71,14 +77,18 @@ instance Functor ListMatrix where
 	fmap f (MatrixH r c dat) = MatrixH r c (map (map f) dat)
 
 instance (Show a) => Show (ListMatrix a) where
-	show m@(MatrixH r c []) = ""
+	show m@(MatrixH r c []) = "rows: " ++ show r ++ "\tcolumns: " ++ show c
 	show m@(MatrixH r c (x:xs)) = showVector x ++ show (MatrixH r c xs)
 		where 
 			showVector :: Show a => [a] -> String
 			showVector b = "|\t" ++ foldr ((++) . (++ "\t") . show) [] b ++ "|\n"
-	show m@(MatrixV _ _ _) = show . transpose $ m
+	show m@(MatrixV _ _ _) = show . format $ m
 
 --class Matrix a where
+
+format :: ListMatrix a -> ListMatrix a
+format (MatrixH r c dat) = MatrixV r c $ transpose' dat
+format (MatrixV r c dat) = MatrixH r c $ transpose' dat
 
 horizontalMatrix :: ListMatrix a -> Bool
 horizontalMatrix (MatrixH _ _ _) = True
