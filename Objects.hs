@@ -22,19 +22,19 @@ sphere r divs = connectArcs $ genRotations divs $ arc r divs
 
 sphereTri :: (Matrix m) => Float -> Int -> [m Float]
 sphereTri r divs = let arcs = genRotations divs $ arc r divs in concat $ genTriangles arcs
+	where
+		genTriangles :: (Matrix m) => [m a] -> [[m a]]
+		genTriangles src = let arcs = map rows src in zipWith (\a b -> triangleArcs a b) arcs $ drop 1 arcs
+	
+		triangleArcs :: (Matrix m) => [[a]] -> [[a]] -> [m a]
+		triangleArcs = ((map fromList) .) . zipTri
 
---Error from here
-genTriangles :: (Matrix m) => [m a] -> [[m a]]
-genTriangles src = let arcs = map rows src in zipWith (\a b -> triangleArcs a b ++ triangleArcs b a) arcs $ drop 1 arcs
-
-triangleArcs :: (Matrix m) => [[a]] -> [[a]] -> [m a]
-triangleArcs = zipWith ((fromList .) . zipTri)
 
 zipTri :: [a] -> [a] -> [[a]]
 zipTri p q = zipWith (\a (b,c) -> [a,b,c]) p . zip q $ drop 1 q
 
 genRotations :: (Matrix m, Integral a) => a -> m Float -> [m Float]
-genRotations divs = take (1 + fromIntegral divs) . iterate (matrixProduct (rotateY $ 360 / fromIntegral divs))
+genRotations divs = take (1 + fromIntegral divs) . iterate ((flip matrixProduct) (rotateY $ 360 / fromIntegral divs))
 
 arc :: (Integral a, Matrix m) => Float -> a -> m Float
 arc r divs = fromList $ [ [r * cos (qu * 2 * pi / fromIntegral divs), r * sin (qu * 2 * pi / fromIntegral divs), 0, 1 ] | t <- [1..divs], let qu = fromIntegral t]

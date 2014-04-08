@@ -7,7 +7,8 @@ module Render
 	project, 
 	initRenderable,
 	renderFile,
-	renderLineMatrix,
+	render,
+	triToLine,
 	scaleLineMatrix,
 	optimizeGrid
 	) 
@@ -41,7 +42,7 @@ initRenderable :: (Matrix m,Num a) => Screen a -> Output a -> Color a -> Rendera
 initRenderable scr out col = Renderable scr out col (identity 4 4) [] []
 
 renderFile :: (Matrix m, RealFrac a, Ord a, Integral b) => Renderable m a -> [(b,b,b)]
-renderFile buffer@(Renderable scr out col edge mls mtri) = pixelsGridOM (wh out) (0,0,0) . map integralize . optimizeGrid $ renderLineMatrix buffer
+renderFile buffer@(Renderable scr out col edge mls mtri) = pixelsGridOM (wh out) (0,0,0) . map integralize . optimizeGrid $ render buffer
 	where 
 		wh :: (RealFrac a,Integral b) => Area a -> (b,b)
 		wh (Area (xl,xh) (yl,yh)) = (floor $ xh-xl,floor $ yh-yl)
@@ -50,12 +51,13 @@ renderFile buffer@(Renderable scr out col edge mls mtri) = pixelsGridOM (wh out)
 
 --Triangles
 
-triToLine :: (Matrix m) => m Float -> [m Float]
-triToLine mat = let tri = rows mat in zipWith (\a b -> fromList $ [a,b]) tri $ cycle (drop 1 tri)
+triToLine :: (Matrix m) => m a -> [m a]
+triToLine mat = let tri = rows mat in zipWith (\a b -> fromList $ [a,b]) tri $ drop 1 (cycle tri)
 
 --renderLineMatrix :: (Matrix m,RealFrac a,Integral b) => [m a] -> Area a -> Area a -> (b,b,b) -> [(b,b,(b,b,b))]
-renderLineMatrix :: (Matrix m, RealFrac a, Ord a, Integral b) => Renderable m a -> [(b,b,(a,a,a))]
-renderLineMatrix (Renderable scr out col edge mls mtri) = sort . concat . flip renderPointArray col $ scaleLineMatrix mls scr out
+render :: (Matrix m, RealFrac a, Ord a, Integral b) => Renderable m a -> [(b,b,(a,a,a))]
+render (Renderable scr out col edge mls mtri) = sort . concat . flip renderPointArray col $ scaleLineMatrix lineMatrix scr out
+	where lineMatrix = mls ++ concatMap triToLine mtri
 
 scaleLineMatrix :: (Matrix m, RealFrac a) => [m a] -> Area a -> Area a -> [[Point a]]
 scaleLineMatrix ls src scale = map ( map (toPixels src scale . (\(x:y:_) -> (x,y))) . rows) ls
@@ -116,27 +118,3 @@ compilePixelsGrid [] xs = xs
 compilePixelsGrid src@((x1,y1,dat1):rem1) ((x2,y2,dat2):rem2)
 	| (x1,y1) == (x2,y2) = (x1,y1,dat1) : compilePixelsGrid rem1 rem2
 	| otherwise = (x2,y2,dat2) : compilePixelsGrid src rem2
-
-
---PPM formatting
-
-
-
-
-
---[DEPRECATED], limited functionality / readibility / optimization for raw generation
---optimized for many pixel changes, preferred version?
---loses more on natural recursion compared to list comprehensions
---saves TONS on many updates
-pixelsGrid :: Integral a => (a,a) -> (a,a,a) -> [(a,a,(a,a,a))] -> [(a,a,a)] --readable & recursive, 
-pixelsGrid (w,h) defaultPixel pixels = pixelsHelp (w,h) pixels
-	where 
-		pixelsHelp (1,0) _ = [];
-		pixelsHelp (x, 0) pList = pixelsHelp (x-1,h) pList;
-		pixelsHelp (x,y) [] = defaultPixel : pixelsHelp (x,y-1) [];
-		pixelsHelp (x,y) pList = let pCurrent = pix pList in if null pCurrent then defaultPixel : (pixelsHelp (x,y-1) pList) else (head pCurrent) : (pixelsHelp (x,y-1) (tail pList))
-			where 
-				pix [] = [];
-				pix ((px,py,p):ps) = if (px,py) == (x,y) then [p] else []
-
-

@@ -49,7 +49,7 @@ parseIO (l:ls) sbuf buffer@(Renderable scr out col edge mls mtri)
 	| w == "render-parallel" = do
 		print "we doin this render\n"
 		let
-			output = optimizeGrid $ renderLineMatrix buffer
+			output = optimizeGrid $ render buffer
 		print output
 		writeIORef sbuf $ output
 		display sbuf
@@ -57,14 +57,14 @@ parseIO (l:ls) sbuf buffer@(Renderable scr out col edge mls mtri)
 	| w == "render-perspective-cyclops" = do
 		let 
 			(ex:ey:ez:_) = readFloats ws
-		writeIORef sbuf $ optimizeGrid $ renderLineMatrix $ buffer {_col = green, _linematrix = project (ex,ey,ez) mls}
+		writeIORef sbuf $ optimizeGrid $ render $ buffer {_col = green, _linematrix = project (ex,ey,ez) mls, _triangleMatrix = project (ex,ey,ez) $ filter (backFace [ex,ey,ez] . rows) mtri}
 		display sbuf
 		parseIO ls sbuf buffer
 	| w == "render-perspective-stereo" = do
 		let
 			(ex1:ey1:ez1:ex2:ey2:ez2:_) = readFloats ws
-			left = renderLineMatrix $ buffer {_col = cyan, _linematrix = project (ex1,ey1,ez1) mls}
-			right = renderLineMatrix $ buffer {_col = red, _linematrix = project (ex2,ey2,ez2) mls}
+			left = render $ buffer {_col = cyan, _linematrix = project (ex1,ey1,ez1) mls, _triangleMatrix = project (ex1,ey1,ez1) mls}
+			right = render $ buffer {_col = red, _linematrix = project (ex2,ey2,ez2) mls, _triangleMatrix = project (ex2,ey2,ez2) mls}
 			stereo = sort (left ++ right)
 		writeIORef sbuf $ optimizeGrid stereo
 		display sbuf
@@ -82,7 +82,8 @@ parse l buffer@(Renderable scr out col edge mls mtri)
 	| w == "pixels" = let (x:y:_) = readFloats ws in (buffer {_out = Area {xRange=(0,x),yRange=(0,y)}})
 	| w == "identity" = buffer { _edgematrix = identity 4 4}
 	| w == "line" = let (x1:y1:z1:x2:y2:z2:_) = readFloats ws in (buffer {_linematrix = (line x1 y1 z1 x2 y2 z2) : mls})
-	| w == "sphere" = let (r:_) = readFloats ws in (buffer {_linematrix = sphere r sphereDivisions ++ mls})
+	| w == "sphere" = let (r:_) = readFloats ws in (buffer {_triangleMatrix = sphereTri r sphereDivisions ++ mtri})
+	| w == "triangle" = buffer {_triangleMatrix = (fromList [[1,0,0,1],[0,1,0,1],[0,0,1,1]]) : mtri}
 	| w == "move" = let (x:y:z:_) = readFloats ws in buffer {_edgematrix = matrixProduct edge (move x y z)}
 	| w == "scale" = let (x:y:z:_) = readFloats ws in buffer {_edgematrix = matrixProduct edge (scale x y z)}
 	| w == "rotate-x" = let (deg:_) = readFloats ws in buffer {_edgematrix = matrixProduct edge (rotateX deg)}

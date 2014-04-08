@@ -68,8 +68,7 @@ instance Matrix ListMatrix where
 		| otherwise = error $ "The columns of matrix A:" ++ show a ++ " must equal the rows of matrix B:" ++ show b
 	matrixProduct mH@(MatrixH _ _ _) mH2@(MatrixH _ _ _) = matrixProduct mH $ format mH2
 	matrixProduct mV@(MatrixV _ _ _) mV2@(MatrixV _ _ _) = matrixProduct (format mV) mV2
-	matrixProduct mV@(MatrixV _ _ _) mV2@(MatrixH _ _ _) = matrixProduct (format mV) (format mV2)
-	matrixProduct mV mO = error $ "Uh oh, cant multiply these two. A : " ++ show (horizontalMatrix mV) ++ " B : " ++ show (horizontalMatrix mO) -- ++ "\nA : \n" ++ show mV ++ "\nB: \n" ++ show mO
+	matrixProduct mV@(MatrixV _ _ _) mH@(MatrixH _ _ _) = matrixProduct (format mV) (format mH)
 
 --instance Matrix ListMatrix
 instance Functor ListMatrix where
@@ -77,7 +76,7 @@ instance Functor ListMatrix where
 	fmap f (MatrixH r c dat) = MatrixH r c (map (map f) dat)
 
 instance (Show a) => Show (ListMatrix a) where
-	show m@(MatrixH r c []) = "rows: " ++ show r ++ "\tcolumns: " ++ show c
+	show m@(MatrixH r c []) = "rows: " ++ show r ++ "\tcolumns: " ++ show c ++ "\n"
 	show m@(MatrixH r c (x:xs)) = showVector x ++ show (MatrixH r c xs)
 		where 
 			showVector :: Show a => [a] -> String
