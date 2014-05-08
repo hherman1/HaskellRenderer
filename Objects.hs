@@ -14,34 +14,6 @@ import Matrix3D
 line x1 y1 z1 x2 y2 z2 = fromList $ [[x1,y1,z1,1],[x2,y2,z2,1]]
 
 --Cube
-{-
-  double tlf[4] = { -1, 1, 1, 1};	// top left front
-  double tlb[4] = { -1, 1, -1, 1};	// top left back
-  double trf[4] = {1, 1, 1, 1};	// top right front
-  double trb[4] = {1, 1, -1, 1};	// top right back
-  double blf[4] = { -1, -1, 1, 1};	// back left front
-  double blb[4] = { -1, -1, -1, 1};	// back left back
-  double brf[4] = {1, -1, 1, 1};	// back right front
-  double brb[4] = {1, -1, -1, 1};	// back right back
-
-  addtriangle(cube, tlf, trb, tlb);
-  addtriangle(cube, tlf, trf, trb);
-  // bottom face -- done
-  addtriangle(cube, blf, brb, brf);
-  addtriangle(cube, blf, blb, brb);
-  // back face -- done
-  addtriangle(cube, blb, trb, brb);
-  addtriangle(cube, blb, tlb, trb);
-  // front face -- done
-  addtriangle(cube, blf, brf, trf);
-  addtriangle(cube, blf, trf, tlf);
-  // right face -- done
-  addtriangle(cube, brf, brb, trb);
-  addtriangle(cube, brf, trb, trf);
-  // left face
-  addtriangle(cube, blf, tlf, blb);
-  addtriangle(cube, blb, tlf, tlb);
--}
 
 unitCube :: (Matrix m) => [m Float]
 unitCube = [
