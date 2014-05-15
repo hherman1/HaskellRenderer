@@ -2,7 +2,8 @@ module Objects
 (
 	line,
 	sphere,
-	sphereTri
+	sphereTri,
+	unitCube
 )
 where
 import Matrix
@@ -52,16 +53,21 @@ sphere r divs = connectArcs $ genRotations divs $ arc r divs
 		-- connectArcs arcs = let arc = map rows arcs in (concat $ map fromList arc) ++ (concat $ map fromList  . Matrix.transpose' $ arc) -- (concat $ map traceMatrix $ Matrix.transpose' arcs) -- zipWith (map traceMatrix) arcs (drop 1 arcs))
 		connectArcs arcs = let arc = map rows arcs in (concat $ map traceMatrix arcs) ++ (concat $ zipWith (zipWith (\a b -> Matrix.fromList [a,b])) arc (drop 1 arc))
 		traceMatrix m = let mr = rows m in zipWith (\a b -> Matrix.fromList $ [a,b]) mr (drop 1 mr) 
+-- test
+test = 1
 
 sphereTri :: (Matrix m) => Float -> Int -> [m Float]
-sphereTri r divs = let arcs = genRotations divs $ arc r divs in concat $ genTriangles arcs
+sphereTri r divs = let arcs = genRotations divs $ arc r divs in mZipTri arcs
 	where
+		mZipTri :: (Matrix m) => [m a] -> [m a]
+		mZipTri arc = let arcs = map rows arc in concat . map (map fromList) . zipWith zipTri arcs $ drop 1 arcs
+{-	where
 		genTriangles :: (Matrix m) => [m a] -> [[m a]]
 		genTriangles src = let arcs = map rows src in zipWith (\a b -> triangleArcs a b) arcs $ drop 1 arcs
-	
+		
 		triangleArcs :: (Matrix m) => [[a]] -> [[a]] -> [m a]
 		triangleArcs = ((map fromList) .) . zipTri
-
+		-}
 
 zipTri :: [a] -> [a] -> [[a]]
 zipTri p q = zipWith (\a (b,c) -> [a,b,c]) p . zip q $ drop 1 q
