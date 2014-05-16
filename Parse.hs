@@ -21,7 +21,7 @@ import PPM
 
 -- Input, Screen to size from, Output to size to, transformation matrix, line matrix
 maxColor = 255
-sphereDivisions = 20
+sphereDivisions = 10
 
 cyan = (0,255,255)
 red = (255,0,0)

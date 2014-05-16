@@ -10,7 +10,6 @@ import Matrix
 import Matrix3D
 
 
-
 --Lines
 line x1 y1 z1 x2 y2 z2 = fromList $ [[x1,y1,z1,1],[x2,y2,z2,1]]
 
@@ -54,13 +53,13 @@ sphere r divs = connectArcs $ genRotations divs $ arc r divs
 		connectArcs arcs = let arc = map rows arcs in (concat $ map traceMatrix arcs) ++ (concat $ zipWith (zipWith (\a b -> Matrix.fromList [a,b])) arc (drop 1 arc))
 		traceMatrix m = let mr = rows m in zipWith (\a b -> Matrix.fromList $ [a,b]) mr (drop 1 mr) 
 -- test
-test = 1
+test = 3
 
 sphereTri :: (Matrix m) => Float -> Int -> [m Float]
 sphereTri r divs = let arcs = genRotations divs $ arc r divs in mZipTri arcs
 	where
 		mZipTri :: (Matrix m) => [m a] -> [m a]
-		mZipTri arc = let arcs = map rows arc in concat . map (map fromList) . zipWith zipTri arcs $ drop 1 arcs
+		mZipTri arc = let arcs = map rows arc in concat . map (map fromList) $ zipWith (zipTri) (drop 1 arcs) arcs ++ zipWith (flip zipTri) arcs (drop 1 arcs)
 {-	where
 		genTriangles :: (Matrix m) => [m a] -> [[m a]]
 		genTriangles src = let arcs = map rows src in zipWith (\a b -> triangleArcs a b) arcs $ drop 1 arcs
@@ -76,4 +75,4 @@ genRotations :: (Matrix m, Integral a) => a -> m Float -> [m Float]
 genRotations divs = take (1 + fromIntegral divs) . iterate ((flip matrixProduct) (rotateY $ 360 / fromIntegral divs))
 
 arc :: (Integral a, Matrix m) => Float -> a -> m Float
-arc r divs = fromList $ [ [r * cos (qu * 2 * pi / fromIntegral divs), r * sin (qu * 2 * pi / fromIntegral divs), 0, 1 ] | t <- [1..divs], let qu = fromIntegral t]
+arc r divs = fromList $ [ [r * sin (qu *  pi / fromIntegral divs), r * cos (qu *  pi / fromIntegral divs), 0, 1 ] | t <- [1..divs], let qu = fromIntegral t]
