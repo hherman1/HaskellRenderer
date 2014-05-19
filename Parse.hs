@@ -27,7 +27,7 @@ sphereDivisions = 10
 
 cyan = (0,255,255)
 red = (255,0,0)
-green = (0,150,0)
+green = (250,0,0.65)
 
 {- initParse :: (Matrix m) => [String] -> Output Float -> (Float,Float,Float) -> Renderable m Float
 initParse str winSize col = parseIO str (Renderable defaultArea winSize col [] []) $ identity 4 4
@@ -74,8 +74,14 @@ parseIO (l:ls) sbuf buffer@(Renderable scr out col edge mls mtri)
 	| w == "spinc" = do
 		let
 			(ex:ey:ez:_) = readFloats ws
-		writeIORef sbuf $ optimizeGrid $ render $ buffer {_col = green, _linematrix = project (ex,ey,ez) mls, _triangleMatrix = project (ex,ey,ez) $ filter (backFace [ex,ey,ez] . rows) mtri}
-		display sbuf
+			rotate x = matrixProduct (rotateX x) . matrixProduct (rotateY x) $ rotateZ x
+		renderBuf <- newIORef buffer
+		fix $ \loop -> do
+			tbuf <- readIORef renderBuf
+			writeIORef renderBuf $ tbuf {_col = green, _linematrix = project (ex,ey,ez) . map ((flip matrixProduct) rotate) $ mls, _triangleMatrix = project (ex,ey,ez) $ filter (backFace [ex,ey,ez] . rows) . map ((flip matrixProduct) rotate) $ mtri}
+			writeIORef sbuf $ optimizeGrid $ render $ tbuf
+			display sbuf
+			loop
 	| otherwise = parseIO ls sbuf $ parse l buffer
 	where
 		(w:ws) = words l
