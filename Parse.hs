@@ -77,8 +77,13 @@ parseIO (l:ls) sbuf buffer@(Renderable scr out col edge mls mtri)
 			rotate x = matrixProduct (rotateX x) . matrixProduct (rotateY x) $ rotateZ x
 		renderBuf <- newIORef buffer
 		fix $ \loop -> do
-			tbuf <- readIORef renderBuf
-			writeIORef renderBuf $ tbuf {_col = green, _linematrix = project (ex,ey,ez) . map ((flip matrixProduct) rotate) $ mls, _triangleMatrix = project (ex,ey,ez) $ filter (backFace [ex,ey,ez] . rows) . map ((flip matrixProduct) rotate) $ mtri}
+			tbuf@(Renderable _ _ tcol tedge tmls tmtri <- readIORef renderBuf
+			putStrLn $ show $ mtri !! 3
+			writeIORef renderBuf $ tbuf {
+				_col = green,
+				_linematrix = project (ex,ey,ez) . map ((flip matrixProduct) (rotate 15)) $ tmls, 
+				_triangleMatrix = project (ex,ey,ez) $ filter (backFace [ex,ey,ez] . rows) . map ((flip matrixProduct) (rotate 15)) $ mtri
+			}
 			writeIORef sbuf $ optimizeGrid $ render $ tbuf
 			display sbuf
 			loop
