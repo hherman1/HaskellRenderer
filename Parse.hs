@@ -9,6 +9,8 @@ import System.IO
 import Data.IORef
 import Data.List (sort)
 
+import Control.Monad.Fix
+
 import OpenGL
 import Graphics.UI.GLUT.Window (postRedisplay)
 
@@ -69,6 +71,11 @@ parseIO (l:ls) sbuf buffer@(Renderable scr out col edge mls mtri)
 		writeIORef sbuf $ optimizeGrid stereo
 		display sbuf
 		parseIO ls sbuf buffer
+	| w == "spinc" = do
+		let
+			(ex:ey:ez:_) = readFloats ws
+		writeIORef sbuf $ optimizeGrid $ render $ buffer {_col = green, _linematrix = project (ex,ey,ez) mls, _triangleMatrix = project (ex,ey,ez) $ filter (backFace [ex,ey,ez] . rows) mtri}
+		display sbuf
 	| otherwise = parseIO ls sbuf $ parse l buffer
 	where
 		(w:ws) = words l
