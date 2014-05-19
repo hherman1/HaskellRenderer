@@ -20,7 +20,7 @@ rotateX :: (Matrix m) => Float -> m Float
 rotateX deg = let a = toRad deg in fromList $ [[1.0,0,0,0],[0,cos a, (-sin a),0],[0,(sin a),cos a, 0],[0,0,0,1.0]]
 
 rotateY :: (Matrix m) => Float -> m Float
-rotateY deg = let a = toRad deg in fromList $ [[cos a,0,(-sin a),0],[0,1,0,0],[(sin a),0,cos a,0],[0,0,0,1]]
+rotateY deg = let a = toRad deg in fromList $ [[cos a,0,(sin a),0],[0,1,0,0],[(-sin a),0,cos a,0],[0,0,0,1]]
 
 rotateZ :: (Matrix m) => Float -> m Float
 rotateZ deg = let a = toRad deg in fromList $ [[cos a,(-sin a),0,0],[(sin a),cos a,0,0],[0,0,1,0],[0,0,0,1]]
