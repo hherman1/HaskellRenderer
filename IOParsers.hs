@@ -15,7 +15,7 @@ import Objects
 import Render
 import PPM
 
-ioParsers :: (Matrix m) => Map String ([String] -> ScreenBuffer -> Renderable m Float -> ())
+ioParsers :: (Matrix m) => Map String ([String] -> ScreenBuffer -> Renderable m Float -> IO())
 ioParsers = ML.fromList [
 	("end",\_ _ _ -> return ()),
 	("file",renderToFile),

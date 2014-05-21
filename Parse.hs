@@ -18,6 +18,8 @@ import OpenGL
 import Graphics.UI.GLUT.Window (postRedisplay)
 
 import Parsers
+import IOParsers
+
 import Matrix
 import Matrix3D
 import Objects
@@ -41,10 +43,13 @@ initParseIO ls sbuf out col = parseIO ls sbuf $ (initRenderable defaultArea out 
 		defaultArea = Area {xRange = (0,0), yRange = (0,0)}
 
 
-parse :: Matrix m => String -> Map String (Sequence a) -> Renderable m Float -> Renderable m Float
-parse str varys buf = let (w:ws) = words str in case ML.lookup w parsers of
+parse :: Matrix m => [String] -> Renderable m Float -> Renderable m Float
+parse (w:ws) varys buf = case ML.lookup w parsers of
 	(Just f) -> let args = varyValues ws varys in f args buf
 	Nothing -> buf
+
+parseIO :: Matrix m => [String] -> ScreenBuffer -> Renderable m Float -> Maybe (IO ())
+parseIO (w:ws) sbuf buf = case ML.lookup w ioParsers >>= \f -> Just $f ws sbuf buf 
 
 
 parseVarys :: [String] -> Map String (Sequence Float)
