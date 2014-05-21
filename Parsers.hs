@@ -4,7 +4,7 @@ module Parsers
 	parsers
 	)
 where
-iport Data.Map (Map)
+import Data.Map (Map)
 import qualified Data.Map as ML
 
 import Strings
