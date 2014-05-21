@@ -10,11 +10,21 @@ module Matrix3D
 	)
 where
 import Matrix
+
+transform :: (Matrix m, Num a) => m a -> m a -> m a
+transform = flip matrixProduct
+
+collate :: (Matrix m, Num a) => [m a] -> m a
+collate = foldr1 matrixProduct
+
 move :: (Matrix m) => Float -> Float -> Float -> m Float
 move a b c = fromList $ [[1.0,0,0,0],[0,1.0,0,0],[0,0,1.0,0],[a,b,c,1.0]]
 
 scale :: (Matrix m) => Float -> Float -> Float -> m Float
 scale x y z = fromList $ [[x,0,0,0],[0,y,0,0],[0,0,z,0],[1,1,1,1]]
+
+rotate :: (Matrix m) => Float -> Float -> Float -> m Float
+rotate x y z = matrixProduct (rotateX x) $ matrixProduct (rotateY y) $ rotateZ z
 
 rotateX :: (Matrix m) => Float -> m Float
 rotateX deg = let a = toRad deg in fromList $ [[1.0,0,0,0],[0,cos a, (-sin a),0],[0,(sin a),cos a, 0],[0,0,0,1.0]]
