@@ -1,6 +1,9 @@
 module Matrix3D 
-(	move,
+(	transform,
+	collate,
+	move,
 	scale,
+	rotate,
 	rotateX,
 	rotateY,
 	rotateZ,
