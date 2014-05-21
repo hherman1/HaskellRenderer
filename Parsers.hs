@@ -30,7 +30,6 @@ import PPM
 	parseTransform
 )
 -}
-data Sequence a = Anim3D {_frames :: (Int,Int), _values :: (a,a)}
 
 parsers :: (Matrix m) => Map String ([String] -> Renderable m Float -> Renderable m Float)
 parsers = ML.union formatParsers $ ML.union graphicalParsers $ transformationParsers

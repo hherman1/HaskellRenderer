@@ -24,6 +24,8 @@ import Objects
 import Render
 import PPM
 
+data Sequence a = Anim3D {_frames :: (Int,Int), _values :: (a,a)}
+
 -- Input, Screen to size from, Output to size to, transformation matrix, line matrix
 maxColor = 255
 
@@ -47,6 +49,12 @@ parse str varys buf = let (w:ws) = words str in case ML.lookup w parsers of
 
 parseVarys :: [String] -> Map String (Sequence Float)
 parseVarys [] = fromList []
+parseVarys (l:ls) = let ws = words l in case ws of
+	("vary":varName:args) -> let (fs:fe:vs:ve:_) = map readFloat args in insert varName Anim3D {
+		_frames = (fs,fe),
+		_values = (vs,ve)
+	} parseVarys ls
+	_ -> parseVarys ls
 
 parseIO :: (Show (m Float), Matrix m) => [String] -> ScreenBuffer -> Renderable m Float -> IO ()
 parseIO (l:ls) sbuf buffer@(Renderable scr out col edge mls mtri)
