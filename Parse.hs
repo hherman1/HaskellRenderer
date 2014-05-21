@@ -7,8 +7,10 @@ where
 import System.Environment
 import System.IO
 import Data.IORef
-import Data.List (sort, Map)
-import qualified Data.List as DL
+import Data.List (sort)
+
+import Data.Map (Map)
+import qualified Data.Map as ML
 
 import Control.Monad.Fix
 
@@ -38,6 +40,35 @@ initParseIO :: [String] -> ScreenBuffer -> Output Float -> (Float,Float,Float) -
 initParseIO ls sbuf out col = parseIO ls sbuf $ (initRenderable defaultArea out col :: Renderable ListMatrix Float)
 	where 
 		defaultArea = Area {xRange = (0,0), yRange = (0,0)}
+
+parsers :: (Matrix m) => Map String ([String] -> Renderable m Float -> Renderable m Float)
+parsers = ML.union formatParsers $ ML.union graphicalParsers $ transformationParsers
+	where	
+	formatParsers = ML.fromList [
+		("screen",parseScreen),
+		("pixels",parsePixels)
+		]
+	graphicalParsers = ML.fromList [
+		("line",parseLine),
+		("box-t",parseBoxT),
+		("sphere",parseSphere),
+		("triangle",parseTriangle)
+		]
+	transformationParsers = ML.fromList [
+		("identity",parseIdentity),
+		("move",parseMove),
+		("scale",parseScale),
+		("rotate-x",parseRotX),
+		("rotate-y",parseRotY),
+		("rotate-z",parseRotZ),
+		("transform",parseTransform)
+		]
+
+parse :: Matrix m => String -> Map String (Sequence a) -> Renderable m Float -> Renderable m Float
+parse str varys buf = let (w:ws) = words str in case ML.lookup w parsers of
+	(Just f) -> let args = varyValues ws varys in f args buf
+	Nothing -> buf
+
 
 parseVarys :: [String] -> Map String (Sequence Float)
 parseVarys [] = fromList []
