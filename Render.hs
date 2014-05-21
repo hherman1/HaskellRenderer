@@ -16,7 +16,14 @@ where
 import Data.List
 import Matrix
 
-data Renderable m a = Renderable {_screen :: Screen a,_out :: Output a, _col :: Color a, _edgematrix :: m a, _lineMatrix :: [m a], _triangleMatrix :: [m a]} deriving (Show,Eq)
+data Renderable m a = Renderable {
+	_screen :: Screen a,
+	_out :: Output a,
+	_col :: Color a, 
+	_edgematrix :: m a, 
+	_lineMatrix :: [m a], 
+	_triangleMatrix :: [m a]
+} deriving (Show,Eq)
 
 
 data Area a = Area {xRange :: (a,a), yRange :: (a,a)} deriving (Show, Eq)
