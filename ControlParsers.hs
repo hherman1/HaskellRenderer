@@ -5,6 +5,7 @@ module ControlParsers
 	)
 where
 import Sequence
+import Data.Maybe
 import Data.Map (Map)
 import qualified Data.Map as ML
 
@@ -34,14 +35,14 @@ controlParsers = ML.fromList [
 
 
 parseControl :: (Matrix m) => [String] -> [String] -> Int -> Map String (Sequence Float) -> ScreenBuffer -> Renderable m Float -> Maybe (IO (Renderable m Float)) -- Maybe (Renderable m Float)
-parseControl (w:ws) ls fnum varys sbuf buf = ML.lookup w controlParsers >>= \f -> f ls fnum varys sbuf buf
+parseControl (w:ws) ls fnum varys sbuf buf = ML.lookup w controlParsers >>= \f -> Just $ f ls fnum varys sbuf buf
 
 parseLoop ::(Matrix m) => [String] -> Int -> Map String (Sequence Float) -> ScreenBuffer -> Renderable m Float -> IO (Renderable m Float) -- Maybe (Renderable m Float)
-parseLoop [] fnum varys sbuf buf = Just $ return () -- Just buf
-parseLoop (l:ls) fnum varys sbuf buf = (parseIO ws sbuf buf >>= parseLoop ls fnum nVarys sbuf buf) 
-	<|> (parse ws buf >>= \nBuf -> parseLoop ls fnum nVarys sbuf nBuf)
+parseLoop [] fnum varys sbuf buf = return buf -- Just buf
+parseLoop (l:ls) fnum varys sbuf buf = fromMaybe (parseLoop ls fnum nVarys sbuf buf)
+	$   ((>> (parseLoop ls fnum nVarys sbuf buf)) <$> (parseIO ws sbuf buf)) 
+	<|> (parse ws buf >>= \nBuf -> Just $ parseLoop ls fnum nVarys sbuf nBuf)
 	<|> parseControl ws ls fnum nVarys sbuf buf 
-	<|> parseLoop ls fnum nVarys sbuf buf
 	where
 		nVarys = ML.filter (currentSequence fnum) varys
 		ws = map (\word -> case varyReplace fnum nVarys word of (Just var) -> var; Nothing -> word) $ words l
