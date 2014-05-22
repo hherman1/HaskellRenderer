@@ -34,14 +34,13 @@ main = do
 windowArea :: Size -> Area Float
 windowArea (Size x y) = Area (0,fromIntegral x) (0,fromIntegral y)
 
-readInput :: ScreenBuffer -> IO ()
+readInput :: ScreenBuffer -> IO (Renderable ListMatrix Float)
 readInput buffer = do
 	winsize <- get windowSize
 	comms <- fmap lines $ retrieve
 	let 
 		varys = parseVarys comms
-		r = initControlParser comms 0 varys buffer $ (initRenderable defaultArea (windowArea winsize) defaultColor :: Renderable ListMatrix Float)
-	return ()
+	initControlParser comms 0 varys buffer $ (initRenderable defaultArea (windowArea winsize) defaultColor :: Renderable ListMatrix Float)
 	where
 		defaultArea = Area {xRange = (0,0), yRange = (0,0)}
 	--output <- initParse (lines comms) (windowArea winsize) defaultColor
