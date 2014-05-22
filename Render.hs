@@ -10,7 +10,10 @@ module Render
 	render,
 	triToLine,
 	scaleLineMatrix,
-	optimizeGrid
+	optimizeGrid,
+	cyan,
+	red,
+	green
 	) 
 where
 import Data.List
@@ -33,6 +36,9 @@ type Output = Area
 type Point a = (a,a)
 type Color a = (a,a,a)
 
+cyan = (0,255,255) :: Color Float
+red = (255,0,0) :: Color Float
+green = (250,255,0.65) :: Color Float
 
 --POST--
 
