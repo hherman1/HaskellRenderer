@@ -7,8 +7,9 @@ import Graphics.UI.GLUT
 import Graphics.Rendering.OpenGL
 import Data.IORef
 import OpenGL
-import Parse
+import ControlParsers
 import Render
+import Matrix
 
 defaultColor :: (Float, Float, Float)
 defaultColor = (150,150,150) 
@@ -36,8 +37,13 @@ windowArea (Size x y) = Area (0,fromIntegral x) (0,fromIntegral y)
 readInput :: ScreenBuffer -> IO ()
 readInput buffer = do
 	winsize <- get windowSize
-	comms <- retrieve
-	initParseIO (lines comms) buffer (windowArea winsize) defaultColor
+	comms <- fmap lines $ retrieve
+	let 
+		varys = parseVarys comms
+		r = initControlParser comms 0 varys buffer $ (initRenderable defaultArea (windowArea winsize) defaultColor :: Renderable ListMatrix Float)
+	return ()
+	where
+		defaultArea = Area {xRange = (0,0), yRange = (0,0)}
 	--output <- initParse (lines comms) (windowArea winsize) defaultColor
 	--buffer $= map (\(x,y,b) -> (toRational x, toRational y, b)) output
 	--buffer
