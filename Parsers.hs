@@ -1,7 +1,6 @@
 module Parsers 
 (
-	Sequence(..),
-	parsers
+	parse
 	)
 where
 import Data.Map (Map)
@@ -14,6 +13,7 @@ import Matrix3D
 import Objects
 import Render
 import PPM
+import Sequence
 {-
 	parseScreen,
 	parsePixels,
@@ -53,6 +53,8 @@ parsers = ML.union formatParsers $ ML.union graphicalParsers $ transformationPar
 		("transform",parseTransform)
 		]
 
+parse :: Matrix m => [String] -> Renderable m Float -> Maybe (Renderable m Float)
+parse (w:ws) buf = ML.lookup w parsers >>= \f -> Just $f ws buf
 
 parseScreen args buf = let (xl:yl:xh:yh:_) = map readFloat args in buf {
 	_screen = Area {xRange=(xl,xh),yRange=(yl,yh)}
