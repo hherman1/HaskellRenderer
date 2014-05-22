@@ -1,7 +1,6 @@
 screen -2 -2 2 2
 identity
 sphere 3 20 0 0 0
-render-perspective-cyclops 0 0 10
-##spinc 0 0 10 1 0 0
+render-parallel 
 file cube.ppm
 end
