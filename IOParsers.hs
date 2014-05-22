@@ -36,7 +36,6 @@ projCull eye@(ex,ey,ez) = project eye . cull [ex,ey,ez]
 
 ioParsers :: (Matrix m) => Map String ([String] -> ScreenBuffer -> Renderable m Float -> IO())
 ioParsers = ML.fromList [
-	("end",\_ _ _ -> return ()),
 	("file",renderToFile),
 	("render-parallel",renderParallel),
 	("render-perspective-cyclops",renderCyclops),
@@ -56,10 +55,11 @@ renderToFile args sbuf buffer@(Renderable scr out col edge mls mtri) = do
 		}
 	writeFile (head args) $ showPPM out (maxColor ) buf
 
-renderParallel _ sbuf buffer = do
+renderParallel _ sbuf buffer@(Renderable scr out col edge mls mtri) = do
 	let
-		output = optimizeGrid $ render buffer
-	print output
+		output = optimizeGrid $ render $ buffer {
+			_triangleMatrix = filter (parallelCheck . rows) mtri
+		}
 	writeIORef sbuf $ output
 	display sbuf
 
