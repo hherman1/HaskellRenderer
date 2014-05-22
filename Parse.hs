@@ -19,6 +19,7 @@ import Graphics.UI.GLUT.Window (postRedisplay)
 
 import Parsers
 import IOParsers
+import ControlParsers
 
 import Matrix
 import Matrix3D
@@ -26,14 +27,8 @@ import Objects
 import Render
 import PPM
 
-data Sequence a = Anim3D {_frames :: (Int,Int), _values :: (a,a)}
 
 -- Input, Screen to size from, Output to size to, transformation matrix, line matrix
-maxColor = 255
-
-cyan = (0,255,255)
-red = (255,0,0)
-green = (250,0,0.65)
 
 
 
@@ -43,23 +38,9 @@ initParseIO ls sbuf out col = parseIO ls sbuf $ (initRenderable defaultArea out 
 		defaultArea = Area {xRange = (0,0), yRange = (0,0)}
 
 
-parse :: Matrix m => [String] -> Renderable m Float -> Renderable m Float
-parse (w:ws) varys buf = case ML.lookup w parsers of
-	(Just f) -> let args = varyValues ws varys in f args buf
-	Nothing -> buf
-
-parseIO :: Matrix m => [String] -> ScreenBuffer -> Renderable m Float -> Maybe (IO ())
-parseIO (w:ws) sbuf buf = case ML.lookup w ioParsers >>= \f -> Just $f ws sbuf buf 
 
 
-parseVarys :: [String] -> Map String (Sequence Float)
-parseVarys [] = fromList []
-parseVarys (l:ls) = let ws = words l in case ws of
-	("vary":varName:args) -> let (fs:fe:vs:ve:_) = map readFloat args in insert varName Anim3D {
-		_frames = (fs,fe),
-		_values = (vs,ve)
-	} parseVarys ls
-	_ -> parseVarys ls
+
 
 parseIO :: (Show (m Float), Matrix m) => [String] -> ScreenBuffer -> Renderable m Float -> IO ()
 parseIO (l:ls) sbuf buffer@(Renderable scr out col edge mls mtri)
