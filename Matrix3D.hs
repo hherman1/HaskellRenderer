@@ -46,7 +46,7 @@ crossProduct :: Num a => [a] -> [a] -> [a]
 crossProduct (u1:u2:u3:_) (v1:v2:v3:_) = u2 * v3 - u3 * v2 : u3 * v1 - u1 * v3 : u1 * v2 - u2 * v1 : []
 
 parallelCheck :: (Num a, Ord a) => [[a]] -> Bool
-parallelCheck (v1:v2:v3:_) = (>0) $ crossProduct v1 v2 !! 2
+parallelCheck (v1:v2:v3:_) = let (x:y:z:_) = crossProduct v1 v2 in x > 0
 
 backFace :: (Eq a, Ord a, Num a) => [a] -> [[a]] -> Bool
 backFace cam triangle = (<0) $ (take 3 $ zipWith (-) cam (head triangle)) `dotProduct` normal triangle
