@@ -3,9 +3,12 @@ module Main
 	main
 	)
 where
+
+import Data.IORef
+import Control.Monad
+
 import Graphics.UI.GLUT
 import Graphics.Rendering.OpenGL
-import Data.IORef
 import OpenGL
 import ControlParsers
 import Render
@@ -40,8 +43,9 @@ readInput buffer = do
 	comms <- fmap lines $ retrieve
 	let 
 		varys = parseVarys comms
-	initControlParser comms 0 varys buffer $ (initRenderable defaultArea (windowArea winsize) defaultColor :: Renderable ListMatrix Float)
+	fmap last $ mapM (parseFrame comms varys buffer winsize defaultColor) [1..100]
 	where
+		parseFrame comms varys buffer winsize defaultColor n = initControlParser comms n varys buffer $ (initRenderable defaultArea (windowArea winsize) defaultColor :: Renderable ListMatrix Float)
 		defaultArea = Area {xRange = (0,0), yRange = (0,0)}
 	--output <- initParse (lines comms) (windowArea winsize) defaultColor
 	--buffer $= map (\(x,y,b) -> (toRational x, toRational y, b)) output

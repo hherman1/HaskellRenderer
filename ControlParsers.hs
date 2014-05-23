@@ -39,13 +39,13 @@ parseControl (w:ws) ls fnum varys sbuf buf = ML.lookup w controlParsers >>= \f -
 
 parseLoop ::(Matrix m) => [String] -> Int -> Map String (Sequence Float) -> ScreenBuffer -> Renderable m Float -> IO (Renderable m Float) -- Maybe (Renderable m Float)
 parseLoop [] fnum varys sbuf buf = return buf -- Just buf
-parseLoop (l:ls) fnum varys sbuf buf = fromMaybe (parseLoop ls fnum nVarys sbuf buf)
-	$   ((>> (parseLoop ls fnum nVarys sbuf buf)) <$> (parseIO ws sbuf buf)) 
-	<|> (parse ws buf >>= \nBuf -> Just $ parseLoop ls fnum nVarys sbuf nBuf)
-	<|> parseControl ws ls fnum nVarys sbuf buf 
+parseLoop (l:ls) fnum varys sbuf buf = fromMaybe (parseLoop ls fnum varys sbuf buf)
+	$   ((>> (parseLoop ls fnum varys sbuf buf)) <$> (parseIO ws sbuf buf)) 
+	<|> (parse ws buf >>= \nBuf -> Just $ parseLoop ls fnum varys sbuf nBuf)
+	<|> parseControl ws ls fnum varys sbuf buf 
 	where
-		nVarys = ML.filter (currentSequence fnum) varys
-		ws = map (\word -> case varyReplace fnum nVarys word of (Just var) -> var; Nothing -> word) $ words l
+		nVarys = ML.filter (currentSequence fnum) varys 
+		ws = map (\word -> fromMaybe word $ varyReplace fnum nVarys word) $ words l
 
 varyReplace :: Int -> Map String (Sequence Float) -> String -> Maybe String
 varyReplace fnum varys word = ML.lookup word varys >>= Just . show . \seq@(Anim3D (fs,fe) (vs,ve)) -> (fromIntegral (fnum - fs) / fromIntegral (fe - fs)) * (ve - vs) + vs

@@ -1,9 +1,7 @@
 screen -2 -2 2 2
-vary severyn 
-
+vary x 10 20 1 10
 identity
-
+box-t 1 1 1 0 0 0 x 1 1
 sphere 3 20 0 0 0
-spinc 0 0 10 13 13 13 
-file cube.ppm
+render-parallel
 end
