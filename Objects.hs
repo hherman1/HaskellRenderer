@@ -44,7 +44,8 @@ unitCube = [
 		blb = [-1,-1,-1,1]
 		brf = [1,-1,1,1]
 		brb = [1,-1,-1,1]
---Spheres
+--Spheres 
+
 sphere :: (Matrix m) => Float -> Int -> [m Float]
 sphere r divs = connectArcs $ genRotations divs $ arc r divs
 	where 
@@ -52,15 +53,19 @@ sphere r divs = connectArcs $ genRotations divs $ arc r divs
 		-- connectArcs arcs = let arc = map rows arcs in (concat $ map fromList arc) ++ (concat $ map fromList  . Matrix.transpose' $ arc) -- (concat $ map traceMatrix $ Matrix.transpose' arcs) -- zipWith (map traceMatrix) arcs (drop 1 arcs))
 		connectArcs arcs = let arc = map rows arcs in (concat $ map traceMatrix arcs) ++ (concat $ zipWith (zipWith (\a b -> Matrix.fromList [a,b])) arc (drop 1 arc))
 		traceMatrix m = let mr = rows m in zipWith (\a b -> Matrix.fromList $ [a,b]) mr (drop 1 mr) 
+ 
 -- test
 test = 4
-
+-- no testing
 sphereTri :: (Matrix m) => Float -> Int -> [m Float]
 sphereTri r divs = let arcs = genRotations divs $ arc r divs in mZipTri arcs
 	where
 		mZipTri :: (Matrix m) => [m a] -> [m a]
-		mZipTri arc = let arcs = map rows arc in concat . map (map fromList) $ zipWith (flip zipTri) arcs (drop 1 . map (drop 1) $ arcs) ++ zipWith ((map reverse .) . zipTri) arcs (drop 1 arcs)
+		mZipTri arc = let arcs = map rows arc in concat . map (map fromList) 
+			$ zipWith (zipTri) arcs (drop 1 arcs)
+			++ zipWith ((map reverse .) . zipTri) (drop 1 $ map (drop 1) arcs) arcs
 
+-- dasfasdf asdf asdf asdf 
 zipTri :: [a] -> [a] -> [[a]]
 zipTri p q = zipWith (\a (b,c) -> [a,b,c]) p . zip q $ drop 1 q
 

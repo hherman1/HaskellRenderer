@@ -49,6 +49,6 @@ parallelCheck :: (Num a, Ord a) => [[a]] -> Bool
 parallelCheck (v1:v2:v3:_) = let (x:y:z:_) = crossProduct v1 v2 in x >= 0
 
 backFace :: (Eq a, Ord a, Num a) => [a] -> [[a]] -> Bool
-backFace cam triangle = (<0) $ (take 3 $ zipWith (-) cam (head triangle)) `dotProduct` normal triangle
+backFace cam triangle = (>0) $ (take 3 $ zipWith (-) cam (head triangle)) `dotProduct` normal triangle
 	where 
 		normal tri = foldl1 crossProduct . zipWith (zipWith (-)) tri $ drop 1 tri 
