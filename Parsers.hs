@@ -12,6 +12,7 @@ import Matrix
 import Matrix3D
 import Objects
 import Render
+import Parse
 import PPM
 import Sequence
 {-
@@ -31,7 +32,7 @@ import Sequence
 )
 -}
 
-parsers :: (Matrix m) => Map String ([String] -> Renderable m Float -> Renderable m Float)
+parsers :: (Matrix m) => Map String ([String] -> Parser m Float -> Renderable m Float -> Renderable m Float)
 parsers = ML.union formatParsers $ ML.union graphicalParsers $ transformationParsers
 	where	
 	formatParsers = ML.fromList [
@@ -53,28 +54,30 @@ parsers = ML.union formatParsers $ ML.union graphicalParsers $ transformationPar
 		("transform",parseTransform)
 		]
 
-parse :: Matrix m => [String] -> Renderable m Float -> Maybe (Renderable m Float)
+parse :: Matrix m => [String] -> Parser m Float -> Renderable m Float -> Maybe (Renderable m Float)
 parse [] _ = Nothing
-parse (w:ws) buf = ML.lookup w parsers >>= \f -> Just $f ws buf
+parse (w:ws) par buf = ML.lookup w parsers >>= \f -> Just $f ws par buf
 
-parseScreen args buf = let (xl:yl:xh:yh:_) = map readFloat args in buf {
+parseScreen args _ buf = let (xl:yl:xh:yh:_) = map readFloat args in buf {
 	_screen = Area {xRange=(xl,xh),yRange=(yl,yh)}
 	}
 
-parsePixels args buf = let (x:y:_) = map readFloat args in buf {
+parsePixels args _ buf = let (x:y:_) = map readFloat args in buf {
 	_out = Area {xRange = (0,x),yRange = (0,y)}
 	}
 
-parseLine args buf@(Renderable _ _ _ _ mls _) = let (x1:y1:z1:x2:y2:z2:_) = map readFloat args in buf {
+parseLine args _ buf@(Renderable _ _ _ mls _) = let (x1:y1:z1:x2:y2:z2:_) = map readFloat args in buf {
 	_lineMatrix = line x1 y1 z1 x2 y2 z2 : mls
 }
 
-parseBoxT args buf@(Renderable _ _ _ _ _ mtri) = let (sx:sy:sz:rx:ry:rz:mx:my:mz:_) = map readFloat args in buf {
+parseBoxT args buf@(Renderable _ _ _ _ mtri) = let (sx:sy:sz:rx:ry:rz:mx:my:mz:_) = map readFloat args in buf {
 	_triangleMatrix = map (transform (collate [scale sx sy sz, rotate rx ry rz,move mx my mz])) unitCube ++ mtri
 }
 
 parseSphere args buf@(Renderable _ _ _ _ _ mtri) = let (r:divs:x:y:z:_) = map readFloat args in buf {
-	_triangleMatrix = map (transform (move x y z)) $ sphereTri r (floor divs) ++ mtri
+	_triangleMatrix =
+		map (transform (move x y z)) (sphereTri r (floor divs))
+		++ mtri
 }
 
 parseIdentity _ buf = buf {

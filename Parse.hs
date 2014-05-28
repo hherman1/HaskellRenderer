@@ -1,113 +1,44 @@
-module Parse 
-(	
-	initParseIO,
+module Parse
+(
+	Parser (..),
+	varyFold,
+	parseVarys,
 	)
-where 
-
-import System.Environment
-import System.IO
-import Data.IORef
-import Data.List (sort)
-
+where
+import Sequence
+import Strings
 import Data.Map (Map)
 import qualified Data.Map as ML
+import Data.Maybe 
 
-import Control.Monad.Fix
-
-import OpenGL
-import Graphics.UI.GLUT.Window (postRedisplay)
-
-import Parsers
-import IOParsers
-import ControlParsers
-
-import Matrix
-import Matrix3D
-import Objects
-import Render
-import PPM
-
-
--- Input, Screen to size from, Output to size to, transformation matrix, line matrix
-
-
-
-initParseIO :: [String] -> ScreenBuffer -> Output Float -> (Float,Float,Float) -> IO ()
-initParseIO ls sbuf out col = parseIO ls sbuf $ (initRenderable defaultArea out col :: Renderable ListMatrix Float)
-	where 
-		defaultArea = Area {xRange = (0,0), yRange = (0,0)}
-
-
-
-
-
-
-parseIO :: (Show (m Float), Matrix m) => [String] -> ScreenBuffer -> Renderable m Float -> IO ()
-parseIO (l:ls) sbuf buffer@(Renderable scr out col edge mls mtri)
-	| w == "end" = do
-		return ()
-	| w == "file" = do
-		let 
-			buf = renderFile buffer
-		writeFile (head ws) $ showPPM out maxColor buf
-		parseIO ls sbuf buffer
-	| w == "render-parallel" = do
-		print "we doin this render\n"
-		let
-			output = optimizeGrid $ render buffer
-		print output
-		writeIORef sbuf $ output
-		display sbuf
-		parseIO ls sbuf buffer
-	| w == "render-perspective-cyclops" = do
-		let 
-			(ex:ey:ez:_) = readFloats ws
-		displayBuffer sbuf $ buffer {
-			_col = green, 
-			_lineMatrix = project (ex,ey,ez) mls, 
-			_triangleMatrix = project (ex,ey,ez) $ filter (backFace [ex,ey,ez] . rows) mtri
-		}
-		parseIO ls sbuf buffer
-	| w == "render-perspective-stereo" = do
-		let
-			(ex1:ey1:ez1:ex2:ey2:ez2:_) = readFloats ws
-			left = render $ buffer {
-				_col = cyan, 
-				_lineMatrix = projCull (ex1,ey1,ez1) mls, 
-				_triangleMatrix = projCull (ex1,ey1,ez1) mls
-			}
-			right = render $ buffer {_col = red, _lineMatrix = project (ex2,ey2,ez2) mls, _triangleMatrix = project (ex2,ey2,ez2) mls}
-			stereo = sort (left ++ right)
-		writeIORef sbuf $ optimizeGrid stereo
-		display sbuf
-		parseIO ls sbuf buffer
-	| w == "spinc" = do
-		let
-			(ex:ey:ez:rx:ry:rz:_) = readFloats ws
-			rotate x y z = matrixProduct (rotateX x) . matrixProduct (rotateY y) $ rotateZ z
-		renderBuf <- newIORef buffer
-		fix $ \loop -> do
-			tbuf@(Renderable _ _ tcol tedge tmls tmtri) <- readIORef renderBuf
-			writeIORef renderBuf $ tbuf {
-				_col = green,
-				_lineMatrix = map ((flip matrixProduct) (rotate rx ry rz)) $ tmls, 
-				_triangleMatrix =  map ((flip matrixProduct) (rotate rx ry rz)) $ tmtri
-			}
-			writeIORef sbuf $ optimizeGrid $ render $ tbuf {
-				_lineMatrix = project (ex,ey,ez) $ _lineMatrix tbuf,
-				_triangleMatrix = projCull (ex,ey,ez) $ _triangleMatrix tbuf	
-			}
-			display sbuf
-			loop
-	| otherwise = parseIO ls sbuf $ parse l buffer
+data Parser m a = Parse3D { 
+		_frame :: Int,
+		_varys :: Map String [Sequence Float],
+		_currrentTransform :: m a,
+		_transformations :: Map String (m a)
+} deriving (Show, Eq)
+--confusing code
+--Intent:
+--	try and replace all variables in a line with active values of those variables
+--	if a variable is known but inactive,ignore the line
+--	if a variable is unknown, leave it be. This case does not error when the variable in question is actually a value to be used by the function
+varyFold ::Int -> Map String [Sequence Float] -> [String] -> Maybe [String]
+varyFold fnum seq ws = foldr (f fnum seq) (Just []) ws
 	where
-		(w:ws) = words l
-		readInts src = map read src ::[Int]
-		displayBuffer sbuf buf = do 
-			writeIORef sbuf $ optimizeGrid $ render buf
-			display sbuf
-		cull eye = filter (backFace eye . rows)
-		projCull eye@(ex,ey,ez) = project eye $ cull [ex,ey,ez]
+		f n s w sentence = 									-- Be mysterious. This is haskell.
+			case ML.lookup w s of
+				Just seqs ->								-- Found Variable:
+					case filter (currentSequence fnum) seqs of 			-- Ignore inactive sequences
+						[] -> Nothing						-- No active sequences? Skip Line
+						(s:_) -> fmap ((:) $ show $ seqVal fnum s) sentence	-- If you found an active sequence, append the value of the sequence to the words list
+				Nothing -> fmap (w:) sentence						-- Did not find Variable: append word to words list
 
+parseVarys :: [String] -> Map String [Sequence Float]
+parseVarys [] = ML.fromList []
+parseVarys (l:ls) = let ws = words l in case ws of
+	("vary":varName:args) -> let (fs:fe:vs:ve:_) = map readFloat args in ML.insertWith (++) varName [Anim3D {
+		_frames = (floor fs,floor fe),
+		_values = (vs,ve)
+	}] $ parseVarys ls
+	_ -> parseVarys ls
 
--- Functions

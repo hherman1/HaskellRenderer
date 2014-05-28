@@ -2,8 +2,8 @@ module Render
 (	Renderable(..),
 	Point,
 	Area(..),
-	Screen,
-	Output,
+	Workspace,
+	Resolution,
 	project, 
 	initRenderable,
 	renderFile,
@@ -17,21 +17,21 @@ module Render
 	) 
 where
 import Data.List
+import Data.Map (Map)
 import Matrix
 
 data Renderable m a = Renderable {
-	_screen :: Screen a,
-	_out :: Output a,
+	_screen :: Workspace a,
+	_out :: Resolution a,
 	_col :: Color a, 
-	_edgematrix :: m a, 
 	_lineMatrix :: [m a], 
 	_triangleMatrix :: [m a]
 } deriving (Show,Eq)
 
 
 data Area a = Area {xRange :: (a,a), yRange :: (a,a)} deriving (Show, Eq)
-type Screen = Area
-type Output = Area
+type Workspace = Area
+type Resolution = Area
 
 type Point a = (a,a)
 type Color a = (a,a,a)
@@ -53,11 +53,11 @@ perspective (ex,ey,ez) (px,py,pz) = (	ex - (ez * (px-ex)/(pz-ez)),
 -------------------
 
 
-initRenderable :: (Matrix m,Num a) => Screen a -> Output a -> Color a -> Renderable m a
-initRenderable scr out col = Renderable scr out col (identity 4 4) [] []
+initRenderable :: (Matrix m,Num a) => Workspace a -> Resolution a -> Color a -> Renderable m a
+initRenderable scr out col = Renderable scr out col [] []
 
 renderFile :: (Matrix m, RealFrac a, Ord a, Integral b) => Renderable m a -> [(b,b,b)]
-renderFile buffer@(Renderable scr out col edge mls mtri) = pixelsGridOM (wh out) (0,0,0) . map integralize . optimizeGrid $ render buffer
+renderFile buffer@(Renderable scr out col mls mtri) = pixelsGridOM (wh out) (0,0,0) . map integralize . optimizeGrid $ render buffer
 	where 
 		wh :: (RealFrac a,Integral b) => Area a -> (b,b)
 		wh (Area (xl,xh) (yl,yh)) = (floor $ xh-xl,floor $ yh-yl)
@@ -71,7 +71,7 @@ triToLine mat = let tri = rows mat in zipWith (\a b -> fromList $ [a,b]) tri $ d
 
 --renderLineMatrix :: (Matrix m,RealFrac a,Integral b) => [m a] -> Area a -> Area a -> (b,b,b) -> [(b,b,(b,b,b))]
 render :: (Matrix m, RealFrac a, Ord a, Integral b) => Renderable m a -> [(b,b,(a,a,a))]
-render (Renderable scr out col edge mls mtri) = sort . concat . flip renderPointArray col $ scaleLineMatrix lineMatrix scr out
+render (Renderable scr out col mls mtri) = sort . concat . flip renderPointArray col $ scaleLineMatrix lineMatrix scr out
 	where lineMatrix = mls ++ concatMap triToLine mtri
 
 scaleLineMatrix :: (Matrix m, RealFrac a) => [m a] -> Area a -> Area a -> [[Point a]]

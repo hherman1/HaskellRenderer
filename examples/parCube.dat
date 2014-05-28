@@ -1,11 +1,14 @@
 vary test 1 10 10 1
 vary test 15 20 1 10
+vary sd 1 20 -20 1
+vary sd 21 40 1 -20
+
 screen -2 -2 2 2
 
 
 
 identity
 box-t 1 test 1 0 0 0 1 1 0
-sphere 3 20 0 0 -1
+sphere 3 20 0 0 sd
 render-perspective-cyclops 0 0 10
 end
