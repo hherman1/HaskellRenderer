@@ -25,10 +25,12 @@ import Varys
 import Parsers
 import IOParsers
 
-initControlParser :: (Matrix m) => [String] -> Int -> Map String [Sequence Float] -> ScreenBuffer -> Renderable m Float -> IO (Renderable m Float) -- Maybe (Renderable m Float)
+type Controller m = [String] -> Int -> Map String [Sequence Float] -> ScreenBuffer -> Renderable m Float -> IO (Renderable m Float)
+
+initControlParser :: (Matrix m) => Controller m
 initControlParser = parseLoop
 
-controlParsers :: (Matrix m) => Map String ([String] -> Int -> Map String [Sequence Float] -> ScreenBuffer -> Renderable m Float -> IO (Renderable m Float)) -- Maybe (Renderable m Float))
+controlParsers :: (Matrix m) => Map String (Controller m)
 controlParsers = ML.fromList [
 	("stdParse", parseLoop),
 	("end", \_ _ _ _ buf -> return buf) -- Just buf)
@@ -36,6 +38,7 @@ controlParsers = ML.fromList [
 
 
 parseControl :: (Matrix m) => [String] -> [String] -> Int -> Map String [Sequence Float] -> ScreenBuffer -> Renderable m Float -> Maybe (IO (Renderable m Float)) -- Maybe (Renderable m Float)
+parseControl [] _ _ _ _ _ = Nothing
 parseControl (w:ws) ls fnum varys sbuf buf = ML.lookup w controlParsers >>= \f -> Just $ f ls fnum varys sbuf buf
 
 parseLoop ::(Matrix m) => [String] -> Int -> Map String [Sequence Float] -> ScreenBuffer -> Renderable m Float -> IO (Renderable m Float) -- Maybe (Renderable m Float)
@@ -48,5 +51,5 @@ parseLoop (l:ls) fnum varys sbuf buf = do
 		<|> parseControl ws ls fnum varys sbuf buf 
 	where
 		nVarys = varys 
-		ws = fromMaybe [""] . varyFold fnum varys $ words l
+		ws = fromMaybe [] . varyFold fnum varys $ words l
 

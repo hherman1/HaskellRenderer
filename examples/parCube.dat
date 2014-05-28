@@ -1,6 +1,9 @@
 vary test 1 10 10 1
 vary test 15 20 1 10
 screen -2 -2 2 2
+
+
+
 identity
 box-t 1 test 1 0 0 0 1 1 0
 sphere 3 20 0 0 -1

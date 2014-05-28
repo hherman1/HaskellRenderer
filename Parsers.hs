@@ -54,6 +54,7 @@ parsers = ML.union formatParsers $ ML.union graphicalParsers $ transformationPar
 		]
 
 parse :: Matrix m => [String] -> Renderable m Float -> Maybe (Renderable m Float)
+parse [] _ = Nothing
 parse (w:ws) buf = ML.lookup w parsers >>= \f -> Just $f ws buf
 
 parseScreen args buf = let (xl:yl:xh:yh:_) = map readFloat args in buf {

@@ -44,6 +44,7 @@ ioParsers = ML.fromList [
 	]
 
 parseIO :: Matrix m => [String] -> ScreenBuffer -> Renderable m Float -> Maybe (IO ())
+parseIO [] _ _ = Nothing
 parseIO (w:ws) sbuf buf = ML.lookup w ioParsers >>= \f -> Just $f ws sbuf buf 
 
 renderToFile :: (Matrix m) => [String] -> ScreenBuffer -> Renderable m Float -> IO ()
