@@ -1,6 +1,7 @@
 module Parsers 
 (
-	parse
+	parseGeo,
+	parseTrans,
 	)
 where
 import Data.Map (Map)
@@ -33,79 +34,85 @@ import Sequence
 -}
 
 parsers :: (Matrix m) => Map String ([String] -> Parser m Float -> Renderable m Float -> Renderable m Float)
-parsers = ML.union formatParsers $ ML.union graphicalParsers $ transformationParsers
+parsers = ML.union formatParsers $ ML.union graphicalParsers 
 	where	
 	formatParsers = ML.fromList [
 		("screen",parseScreen),
 		("pixels",parsePixels)
 		]
-	graphicalParsers = ML.fromList [
+	geometricParsers = ML.fromList [
+		("transform",parseTransform)
 		("line",parseLine),
 		("box-t",parseBoxT),
 		("sphere",parseSphere)
 		]
-	transformationParsers = ML.fromList [
-		("identity",parseIdentity),
-		("move",parseMove),
-		("scale",parseScale),
-		("rotate-x",parseRotX),
-		("rotate-y",parseRotY),
-		("rotate-z",parseRotZ),
-		("transform",parseTransform)
-		]
 
-parse :: Matrix m => [String] -> Parser m Float -> Renderable m Float -> Maybe (Renderable m Float)
-parse [] _ = Nothing
-parse (w:ws) par buf = ML.lookup w parsers >>= \f -> Just $f ws par buf
+transformationParsers :: Matrix m => Map String ([String] -> Parser m Float -> Parser m Float)
+transformationParsers = ML.fromList [
+	("identity",parseIdentity),
+	("move",parseMove),
+	("scale",parseScale),
+	("rotate-x",parseRotX),
+	("rotate-y",parseRotY),
+	("rotate-z",parseRotZ)
+	]
 
-parseScreen args _ buf = let (xl:yl:xh:yh:_) = map readFloat args in buf {
+parseGeo :: Matrix m => [String] -> Parser m Float -> Renderable m Float -> Maybe (Renderable m Float)
+parseGeo [] _ _ = Nothing
+parseGeo (w:ws) par buf = ML.lookup w parsers >>= \f -> Just $f ws par buf
+
+parseTrans :: Matrix m => [String] -> Parser m Float -> Maybe (Parser m Float)
+parseTrans [] _ = Nothing
+parseTrans (w:ws) par = ML.lookup w transformationParsers >>= \f -> Just $f ws par
+
+parseScreen args _ par buf = let (xl:yl:xh:yh:_) = map readFloat args in buf {
 	_screen = Area {xRange=(xl,xh),yRange=(yl,yh)}
 	}
 
-parsePixels args _ buf = let (x:y:_) = map readFloat args in buf {
+parsePixels args _ par buf = let (x:y:_) = map readFloat args in buf {
 	_out = Area {xRange = (0,x),yRange = (0,y)}
 	}
 
-parseLine args _ buf@(Renderable _ _ _ mls _) = let (x1:y1:z1:x2:y2:z2:_) = map readFloat args in buf {
+parseLine args _ par buf@(Renderable _ _ _ mls _) = let (x1:y1:z1:x2:y2:z2:_) = map readFloat args in buf {
 	_lineMatrix = line x1 y1 z1 x2 y2 z2 : mls
 }
 
-parseBoxT args buf@(Renderable _ _ _ _ mtri) = let (sx:sy:sz:rx:ry:rz:mx:my:mz:_) = map readFloat args in buf {
+parseBoxT args par buf@(Renderable _ _ _ _ mtri) = let (sx:sy:sz:rx:ry:rz:mx:my:mz:_) = map readFloat args in buf {
 	_triangleMatrix = map (transform (collate [scale sx sy sz, rotate rx ry rz,move mx my mz])) unitCube ++ mtri
 }
 
-parseSphere args buf@(Renderable _ _ _ _ _ mtri) = let (r:divs:x:y:z:_) = map readFloat args in buf {
+parseSphere args par buf@(Renderable _ _ _ _ _ mtri) = let (r:divs:x:y:z:_) = map readFloat args in buf {
 	_triangleMatrix =
 		map (transform (move x y z)) (sphereTri r (floor divs))
 		++ mtri
 }
 
-parseIdentity _ buf = buf {
+parseIdentity _ par buf = buf {
 	_edgematrix = identity 4 4
 }
 
-parseMove args buf@(Renderable _ _ _ edge _ _) = let (x:y:z:_) = map readFloat args in buf {
+parseMove args par buf@(Renderable _ _ _ edge _ _) = let (x:y:z:_) = map readFloat args in buf {
 	_edgematrix = matrixProduct edge $ move x y z
 }
 
-parseScale args buf@(Renderable _ _ _ edge _ _) = let (x:y:z:_) = map readFloat args in buf {
+parseScale args par buf@(Renderable _ _ _ edge _ _) = let (x:y:z:_) = map readFloat args in buf {
 	_edgematrix = matrixProduct edge $ scale x y z
 }
-parseRotate args buf@(Renderable _ _ _ edge _ _) = let (x:y:z:_) = map readFloat args in buf {
+parseRotate args par buf@(Renderable _ _ _ edge _ _) = let (x:y:z:_) = map readFloat args in buf {
 	_edgematrix = matrixProduct edge $ rotate x y z
 }
 
-parseRotX (w:_) buf@(Renderable _ _ _ edge _ _) = let x = readFloat w in buf {
+parseRotX (w:_) par buf@(Renderable _ _ _ edge _ _) = let x = readFloat w in buf {
 	_edgematrix = matrixProduct edge $ rotateX x
 }
-parseRotY (w:_) buf@(Renderable _ _ _ edge _ _) = let y = readFloat w in buf {
+parseRotY (w:_) par = let y = readFloat w in buf {
 	_edgematrix = matrixProduct edge $ rotateY y
 }
-parseRotZ (w:_) buf@(Renderable _ _ _ edge _ _) = let z = readFloat w in buf {
+parseRotZ (w:_) par buf@(Renderable _ _ _ edge _ _) = let z = readFloat w in buf {
 	_edgematrix = matrixProduct edge $ rotateZ z
 }
 
-parseTransform _ buf@(Renderable _ _ _ edge mls mtri) = buf {
+parseTransform _ par buf@(Renderable _ _ _ edge mls mtri) = buf {
 	_edgematrix = identity 4 4,
 	_triangleMatrix = map (transform edge) mtri,
 	_lineMatrix = map (transform edge) mls
