@@ -87,25 +87,25 @@ parseSphere args par buf@(Renderable _ _ _ _ _ mtri) = let (r:divs:x:y:z:_) = ma
 		++ mtri
 }
 
-parseIdentity _ par buf = buf {
-	_edgematrix = identity 4 4
+parseIdentity _ par = par {
+	_currentTransform = identity 4 4
 }
 
-parseMove args par buf@(Renderable _ _ _ edge _ _) = let (x:y:z:_) = map readFloat args in buf {
-	_edgematrix = matrixProduct edge $ move x y z
+parseMove args par@(Parse3D _ _ edge _) = let (x:y:z:_) = map readFloat args in par {
+	_currentTransform = matrixProduct edge $ move x y z
 }
 
-parseScale args par buf@(Renderable _ _ _ edge _ _) = let (x:y:z:_) = map readFloat args in buf {
-	_edgematrix = matrixProduct edge $ scale x y z
+parseScale args par@(Parse3D _ _ edge _) = let (x:y:z:_) = map readFloat args in par {
+	_currentTransform = matrixProduct edge $ scale x y z
 }
-parseRotate args par buf@(Renderable _ _ _ edge _ _) = let (x:y:z:_) = map readFloat args in buf {
-	_edgematrix = matrixProduct edge $ rotate x y z
+parseRotate args par@(Parse3D _ _ edge _) = let (x:y:z:_) = map readFloat args in par {
+	_currentTransform = matrixProduct edge $ rotate x y z
 }
 
-parseRotX (w:_) par buf@(Renderable _ _ _ edge _ _) = let x = readFloat w in buf {
+parseRotX (w:_) par@(Parse3D _ _ edge _) = let x = readFloat w in par {
 	_edgematrix = matrixProduct edge $ rotateX x
 }
-parseRotY (w:_) par = let y = readFloat w in buf {
+parseRotY (w:_) par@ = let y = readFloat w in buf {
 	_edgematrix = matrixProduct edge $ rotateY y
 }
 parseRotZ (w:_) par buf@(Renderable _ _ _ edge _ _) = let z = readFloat w in buf {
