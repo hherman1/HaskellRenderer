@@ -14,7 +14,7 @@ import Data.Maybe
 data Parser m a = Parse3D { 
 		_frame :: Int,
 		_varys :: Map String [Sequence Float],
-		_currrentTransform :: m a,
+		_currentTransform :: m a,
 		_transformations :: Map String (m a)
 } deriving (Show, Eq)
 --confusing code

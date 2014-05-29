@@ -7,9 +7,12 @@ where
 import Data.IORef
 import Control.Monad
 
+import qualified Data.Map as ML
+
 import Graphics.UI.GLUT
 import Graphics.Rendering.OpenGL
 import OpenGL
+import Parse
 import ControlParsers
 import Render
 import Matrix
@@ -45,7 +48,16 @@ readInput buffer = do
 		varys = parseVarys comms
 	fmap last $ mapM (parseFrame comms varys buffer winsize defaultColor) [1..100]
 	where
-		parseFrame comms varys buffer winsize defaultColor n = initControlParser comms n varys buffer $ (initRenderable defaultArea (windowArea winsize) defaultColor :: Renderable ListMatrix Float)
+		parseFrame comms varys buffer winsize defaultColor n = 
+			initControlParser 
+				comms
+				(Parse3D n varys (identity 4 4) $ ML.fromList [])
+				buffer 
+				(initRenderable 
+					defaultArea 
+					(windowArea winsize) 
+					defaultColor 
+					:: Renderable ListMatrix Float)
 		defaultArea = Area {xRange = (0,0), yRange = (0,0)}
 	--output <- initParse (lines comms) (windowArea winsize) defaultColor
 	--buffer $= map (\(x,y,b) -> (toRational x, toRational y, b)) output

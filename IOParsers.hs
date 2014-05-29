@@ -48,7 +48,7 @@ parseIO [] _ _ = Nothing
 parseIO (w:ws) sbuf buf = ML.lookup w ioParsers >>= \f -> Just $f ws sbuf buf 
 
 renderToFile :: (Matrix m) => [String] -> ScreenBuffer -> Renderable m Float -> IO ()
-renderToFile args sbuf buffer@(Renderable scr out col edge mls mtri) = do
+renderToFile args sbuf buffer@(Renderable scr out col mls mtri) = do
 	let 
 		(r,g,b) = col
 		buf = renderFile $ buffer {
@@ -56,7 +56,7 @@ renderToFile args sbuf buffer@(Renderable scr out col edge mls mtri) = do
 		}
 	writeFile (head args) $ showPPM out (maxColor ) buf
 
-renderParallel _ sbuf buffer@(Renderable scr out col edge mls mtri) = do
+renderParallel _ sbuf buffer@(Renderable scr out col mls mtri) = do
 	let
 		output = optimizeGrid $ render $ buffer {
 			_triangleMatrix = filter (parallelCheck . rows) mtri
@@ -64,7 +64,7 @@ renderParallel _ sbuf buffer@(Renderable scr out col edge mls mtri) = do
 	writeIORef sbuf $ output
 	display sbuf
 
-renderCyclops args sbuf buffer@(Renderable scr out col edge mls mtri) = do
+renderCyclops args sbuf buffer@(Renderable scr out col mls mtri) = do
 	let 
 		(ex:ey:ez:_) = map readFloat args
 	putStrLn "Rendering cyclops"
@@ -75,7 +75,7 @@ renderCyclops args sbuf buffer@(Renderable scr out col edge mls mtri) = do
 	}
 
 renderStereo :: (Matrix m) => [String] -> ScreenBuffer -> Renderable m Float -> IO ()
-renderStereo args sbuf buffer@(Renderable scr out col edge mls mtri) = do
+renderStereo args sbuf buffer@(Renderable scr out col mls mtri) = do
 	let
 		(ex1:ey1:ez1:ex2:ey2:ez2:_) = map readFloat args
 		left = render $ buffer {
@@ -94,13 +94,13 @@ renderStereo args sbuf buffer@(Renderable scr out col edge mls mtri) = do
 
 
 spinCyclops :: (Matrix m) => [String] -> ScreenBuffer -> Renderable m Float -> IO ()
-spinCyclops args sbuf buffer@(Renderable scr out col edge mls mtri) = do
+spinCyclops args sbuf buffer@(Renderable scr out col mls mtri) = do
 	let
 		(ex:ey:ez:rx:ry:rz:_) = map readFloat args
 		rotate x y z = matrixProduct (rotateX x) . matrixProduct (rotateY y) $ rotateZ z
 	renderBuf <- newIORef buffer
 	fix $ \loop -> do
-		tbuf@(Renderable _ _ tcol tedge tmls tmtri) <- readIORef renderBuf
+		tbuf@(Renderable _ _ tcol tmls tmtri) <- readIORef renderBuf
 		writeIORef renderBuf $ tbuf {
 			_col = green,
 			_lineMatrix = map ((flip matrixProduct) (rotate rx ry rz)) $ tmls, 
