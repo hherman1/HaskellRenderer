@@ -104,23 +104,23 @@ parseIdentity _ par = par {
 }
 
 parseMove args par@(Parse3D _ _ edge _) = let (x:y:z:_) = map readFloat args in par {
-	_currentTransform = transform edge $ move x y z
+	_currentTransform = matrixProduct edge $ move x y z
 }
 
 parseScale args par@(Parse3D _ _ edge _) = let (x:y:z:_) = map readFloat args in par {
-	_currentTransform = transform edge $ scale x y z
+	_currentTransform = matrixProduct edge $ scale x y z
 }
 parseRotate args par@(Parse3D _ _ edge _) = let (x:y:z:_) = map readFloat args in par {
-	_currentTransform = transform edge $ rotate x y z
+	_currentTransform = matrixProduct edge $ rotate x y z
 }
 parseRotX (w:_) par@(Parse3D _ _ edge _) = let x = readFloat w in par {
-	_currentTransform = transform edge $ rotateX x
+	_currentTransform = matrixProduct edge $ rotateX x
 }
 parseRotY (w:_) par@(Parse3D _ _ edge _) = let y = readFloat w in par {
-	_currentTransform = transform edge $ rotateY y
+	_currentTransform = matrixProduct edge $ rotateY y
 }
 parseRotZ (w:_) par@(Parse3D _ _ edge _) = let z = readFloat w in par {
-	_currentTransform = transform edge $ rotateZ z
+	_currentTransform = matrixProduct edge $ rotateZ z
 }
 
 parseSave (w:_) par@(Parse3D _ _ cst saves) = par {
