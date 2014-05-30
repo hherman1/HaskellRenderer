@@ -17,42 +17,40 @@ import ControlParsers
 import Render
 import Matrix
 
-defaultColor :: (Float, Float, Float)
+defaultColor :: Render.Color Int
 defaultColor = (150,150,150) 
 
 
 main :: IO ()
 main = do
 	(_progName,_args) <- getArgsAndInitialize
-	initialWindowSize $= Size (500 :: GLsizei) (500 :: GLsizei)
+	initialWindowSize $= Size (400 :: GLsizei) (400 :: GLsizei)
 	_window <- createWindow "im not sure i really understand what im doing in haskell" 
 	-- viewport $= (Position 0 0, Size 1000 1000)
-	buffer <- newIORef []
 	-- pixels <- newIORef $ (Area (0,500) (0,500) :: Area Float)
 	-- readInput buffer
-	displayCallback $= display buffer
-	idleCallback $= Just ((\buf -> do 
-		readInput buf
-		postRedisplay Nothing) buffer)
+	displayCallback $= display (Size 0 0) []
+	idleCallback $= Just (do 
+		t <- readInput
+		postRedisplay Nothing)
 	-- reshapeCallback $= Just (reshape pixels)
 	mainLoop
 
-windowArea :: Size -> Area Float
+windowArea :: Size -> Area Int
 windowArea (Size x y) = Area (0,fromIntegral x) (0,fromIntegral y)
 
-readInput :: ScreenBuffer -> IO (Renderable ListMatrix Float)
-readInput buffer = do
+readInput :: IO (Renderable ListMatrix Float)
+readInput = do
 	winsize <- get windowSize
 	comms <- fmap lines $ retrieve
 	let 
 		varys = parseVarys comms
-	fmap last $ mapM (parseFrame comms varys buffer winsize defaultColor) [1..100]
+	fmap last $ mapM (parseFrame comms varys winsize defaultColor) [1..100]
 	where
-		parseFrame comms varys buffer winsize defaultColor n = 
+		parseFrame comms varys winsize defaultColor n = 
 			initControlParser 
 				comms
 				(Parse3D n varys (identity 4 4) $ ML.fromList [])
-				buffer 
 				(initRenderable 
 					defaultArea 
 					(windowArea winsize) 

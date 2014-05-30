@@ -27,16 +27,13 @@ import Objects
 import Render
 import PPM
 
-displayBuffer sbuf buf = do 
-	writeIORef sbuf $ optimizeGrid $ render buf
-	display sbuf
 
 cull eye = filter (backFace eye . rows)
 
 projCull :: (Matrix m) => (Float,Float,Float) -> [m Float] -> [m Float]
 projCull eye@(ex,ey,ez) = project eye . cull [ex,ey,ez]
 
-ioParsers :: (Matrix m) => Map String ([String] -> Parser m Float -> ScreenBuffer -> Renderable m Float -> IO())
+ioParsers :: (Matrix m) => Map String ([String] -> Parser m Float -> Renderable m Float -> IO())
 ioParsers = ML.fromList [
 	("file",renderToFile),
 	("files",renderFrameToFile),
@@ -46,20 +43,18 @@ ioParsers = ML.fromList [
 	("spinc",spinCyclops)
 	]
 
-parseIO :: Matrix m => [String] -> Parser m Float -> ScreenBuffer -> Renderable m Float -> Maybe (IO ())
-parseIO [] _ _ _ = Nothing
-parseIO (w:ws) par sbuf buf = ML.lookup w ioParsers >>= \f -> Just $f ws par sbuf buf 
+parseIO :: Matrix m => [String] -> Parser m Float -> Renderable m Float -> Maybe (IO ())
+parseIO [] _ _ = Nothing
+parseIO (w:ws) par buf = ML.lookup w ioParsers >>= \f -> Just $f ws par buf 
 
-renderToFile :: (Matrix m) => [String] -> Parser m Float -> ScreenBuffer -> Renderable m Float -> IO ()
-renderToFile (fname:args) par sbuf buffer@(Renderable scr out col mls mtri) = do
+renderToFile :: (Matrix m) => [String] -> Parser m Float -> Renderable m Float -> IO ()
+renderToFile (fname:args) par buffer@(Renderable scr out col mls mtri) = do
 	let 
 		(r,g,b) = col
 		(ex:ey:ez:_) = map readFloat args
-		buf = bufToPPM out . render $ buffer {
-			_col = (255,200,200),
-			--_col = (maxColor * r, maxColor * g, maxColor * b),
+		buf = bufToPPM out $ (render $ buffer {
 			_triangleMatrix = projCull (ex,ey,ez) mtri
-		}
+		} :: [(Int,Int,Color Int)])
 	writeFile fname $ showPPM out maxColor $ buf
 	--putStrLn . show $ render buffer
 	--writeFile "test.ppm" 
@@ -70,31 +65,29 @@ renderToFile (fname:args) par sbuf buffer@(Renderable scr out col mls mtri) = do
 		}
 	-}
 
-renderFrameToFile :: (Matrix m) => [String] -> Parser m Float -> ScreenBuffer -> Renderable m Float -> IO ()
-renderFrameToFile (w:a) par@(Parse3D n _ _ _) sbuf buf = renderToFile
+renderFrameToFile :: (Matrix m) => [String] -> Parser m Float -> Renderable m Float -> IO ()
+renderFrameToFile (w:a) par@(Parse3D n _ _ _) buf = renderToFile
 	(printf "%s%05d.ppm" w n : a)
-	par sbuf buf
+	par buf
 
-renderParallel _ _ sbuf buffer@(Renderable scr out col mls mtri) = do
-	let
-		output = optimizeGrid $ render $ buffer {
+renderParallel _ _ buffer@(Renderable scr out col mls mtri) = do
+	display (toSize out) $ bufToPPM out $ (render $ 
+		buffer {
 			_triangleMatrix = filter (parallelCheck . rows) mtri
-		}
-	writeIORef sbuf $ output
-	display sbuf
+		} :: [(Int,Int,Color Int)])
 
-renderCyclops args par sbuf buffer@(Renderable scr out col mls mtri) = do
+renderCyclops args par buffer@(Renderable scr out col mls mtri) = do
 	let 
 		(ex:ey:ez:_) = map readFloat args
 	putStrLn "Rendering cyclops"
-	displayBuffer sbuf $ buffer {
+	display (toSize out) . bufToPPM out $ (render $ buffer {
 		_col = green, 
 		_lineMatrix = project (ex,ey,ez) mls, 
 		_triangleMatrix = projCull (ex,ey,ez) mtri
-	}
+	} :: [(Int,Int,Color Int)])
 
-renderStereo :: (Matrix m) => [String] -> Parser m Float -> ScreenBuffer -> Renderable m Float -> IO ()
-renderStereo args par sbuf buffer@(Renderable scr out col mls mtri) = do
+renderStereo :: (Matrix m) => [String] -> Parser m Float -> Renderable m Float -> IO ()
+renderStereo args par buffer@(Renderable scr out col mls mtri) = do
 	let
 		(ex1:ey1:ez1:ex2:ey2:ez2:_) = map readFloat args
 		left = render $ buffer {
@@ -108,12 +101,11 @@ renderStereo args par sbuf buffer@(Renderable scr out col mls mtri) = do
 			_triangleMatrix = projCull (ex2,ey2,ez2) mls
 		}
 		stereo = sort (left ++ right)
-	writeIORef sbuf $ optimizeGrid stereo
-	display sbuf
+	display (toSize out) $ bufToPPM out $ (stereo :: [(Int,Int,Color Int)])
 
 
-spinCyclops :: (Matrix m) => [String] -> Parser m Float -> ScreenBuffer -> Renderable m Float -> IO ()
-spinCyclops args par sbuf buffer@(Renderable scr out col mls mtri) = do
+spinCyclops :: (Matrix m) => [String] -> Parser m Float -> Renderable m Float -> IO ()
+spinCyclops args par buffer@(Renderable scr out col mls mtri) = do
 	let
 		(ex:ey:ez:rx:ry:rz:_) = map readFloat args
 		rotate x y z = matrixProduct (rotateX x) . matrixProduct (rotateY y) $ rotateZ z
@@ -125,10 +117,9 @@ spinCyclops args par sbuf buffer@(Renderable scr out col mls mtri) = do
 			_lineMatrix = map ((flip matrixProduct) (rotate rx ry rz)) $ tmls, 
 			_triangleMatrix =  map ((flip matrixProduct) (rotate rx ry rz)) $ tmtri
 		}
-		writeIORef sbuf $ optimizeGrid $ render $ tbuf {
+		display (toSize out) $ bufToPPM out $ (render $ tbuf {
 			_lineMatrix = project (ex,ey,ez) $ _lineMatrix tbuf,
 			_triangleMatrix = projCull (ex,ey,ez) $ _triangleMatrix tbuf	
-		}
-		display sbuf
+		} :: [(Int,Int,Color Int)])
 		loop
 

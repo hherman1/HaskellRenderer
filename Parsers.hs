@@ -61,7 +61,7 @@ parseScreen args par buf = let (xl:yl:xh:yh:_) = map readFloat args in buf {
 	_screen = Area {xRange=(xl,xh),yRange=(yl,yh)}
 	}
 
-parsePixels args par buf = let (x:y:_) = map readFloat args in buf {
+parsePixels args par buf = let (x:y:_) = map read args in buf {
 	_out = Area {xRange = (0,x),yRange = (0,y)}
 	}
 

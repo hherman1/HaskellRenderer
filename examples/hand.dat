@@ -60,6 +60,6 @@ rotate-x finger3
 box-t 0.15 0.5 0.2 0 0 0 0 0.3 0
 
 render-perspective-cyclops 0 0 10
-files anim_save_
+-files anim_save_ 0 0 10
 #display 0.02
 end

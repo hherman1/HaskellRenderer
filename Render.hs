@@ -1,6 +1,7 @@
 module Render
 (	Renderable(..),
 	Point,
+	Color,
 	Area(..),
 	Workspace,
 	Resolution,
@@ -20,8 +21,8 @@ import Matrix
 
 data Renderable m a = Renderable {
 	_screen :: Workspace a,
-	_out :: Resolution a,
-	_col :: Color a, 
+	_out :: Resolution Int,
+	_col :: Color Int, 
 	_lineMatrix :: [m a], 
 	_triangleMatrix :: [m a]
 } deriving (Show,Eq)
@@ -31,12 +32,16 @@ data Area a = Area {xRange :: (a,a), yRange :: (a,a)} deriving (Show, Eq)
 type Workspace = Area
 type Resolution = Area
 
+instance Functor Area where
+	fmap f (Area (x1,x2) (y1,y2)) = Area (f x1, f x2) (f y1, f y2)
+
+
 type Point a = (a,a)
 type Color a = (a,a,a)
 
-cyan = (0,255,255) :: Color Float
-red = (255,0,0) :: Color Float
-green = (250,255,0.65) :: Color Float
+cyan = (0,255,255) :: Color Int
+red = (255,0,0) :: Color Int
+green = (250,255,0) :: Color Int
 
 --POST--
 
@@ -51,7 +56,7 @@ perspective (ex,ey,ez) (px,py,pz) = (	ex - (ez * (px-ex)/(pz-ez)),
 -------------------
 
 
-initRenderable :: (Matrix m,Num a) => Workspace a -> Resolution a -> Color a -> Renderable m a
+initRenderable :: (Matrix m,Num a) => Workspace a -> Resolution Int -> Color Int -> Renderable m a
 initRenderable scr out col = Renderable scr out col [] []
 
 --Triangles
@@ -60,11 +65,11 @@ triToLine :: (Matrix m) => m a -> [m a]
 triToLine mat = let tri = rows mat in zipWith (\a b -> fromList $ [a,b]) tri $ drop 1 (cycle tri)
 
 --renderLineMatrix :: (Matrix m,RealFrac a,Integral b) => [m a] -> Area a -> Area a -> (b,b,b) -> [(b,b,(b,b,b))]
-render :: (Matrix m, RealFrac a, Ord a, Integral b) => Renderable m a -> [(b,b,(a,a,a))]
+render :: (Matrix m, Integral b,RealFrac a) => Renderable m a -> [(b,b,Color Int)]
 render (Renderable scr out col mls mtri) = 
-	sort . concat 
+	optimizeGrid . sort . concat 
 	. map (renderLine col) 
-	. map (scaleLine scr out)
+	. map (scaleLine scr (fmap fromIntegral out))
 	. filter (inBounds scr) 
 	. map pairLines
 	. map rows $ lineMatrix
@@ -79,7 +84,7 @@ inRange (l,h) v = v >= l && v <= h
 scaleLine :: (RealFrac a) => Area a -> Area a -> ((a,a),(a,a)) -> ((a,a),(a,a))
 scaleLine src scale (p1,p2) = (toPixels src scale p1,toPixels src scale p2)
 
-renderLine :: (Integral a,RealFrac b) => (b,b,b) -> (Point b,Point b) -> [(a,a,(b,b,b))]
+renderLine :: (Integral a,RealFrac b) => d -> (Point b,Point b) -> [(a,a,d)]
 renderLine col (p1,p2) = pixelLine col (integralize p1) (integralize p2)
 	where
 		integralize (a,b) = (floor a,floor b)
@@ -91,7 +96,7 @@ toPixels src scale (x,y) = (	sizeToRange (xRange src) (xRange scale) x,
 		sizeToRange (l1,h1) (l2,h2) v = l2 + ((h2-l2) * (v-l1)/(h1-l1))
 
 -- Bresenheim line algorithm
-pixelLine :: Integral a => (b,b,b) -> (a,a) -> (a,a) -> [(a,a,(b,b,b))] 
+pixelLine :: Integral a => d -> (a,a) -> (a,a) -> [(a,a,d)] 
 pixelLine col (x1,y1) (x2,y2) 
 	| x1 == x2 = [(y,x1,col) | let ys = order y1 y2, y <- [snd ys..fst ys]]
 	| abs (x2 - x1) >= abs (y2 - y1) = 
@@ -128,10 +133,12 @@ genGrid (w,h) dat = [(y,x,dat) | y <- [0..h-1], x <- [0..w-1]]
 
 --STANDARD pixelsGrid function, used for final data retrieval
 -- fastest and optimized for all scenarios thanks to haskell's lazy eval
-pixelsGrid :: Integral a => (a,a) -> (a,a,a) -> [(a,a,(a,a,a))] -> [(a,a,a)]
-pixelsGrid (w,h) defaultPixel pixels = map getCol $ compilePixelsGrid pixels $ genGrid (w,h) defaultPixel
+pixelsGrid :: Integral a => (a,a) -> b -> [(a,a,b)] -> [b]
+pixelsGrid (w,h) defaultPixel pixels = map getCol 
+	$ compilePixelsGrid pixels 
+	$ genGrid (w,h) defaultPixel
 
-getCol :: Integral a=> (a,a,(a,a,a)) -> (a,a,a)
+getCol :: Integral a=> (a,a,b) -> b
 getCol (_,_,col) = col
 
 

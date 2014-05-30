@@ -2,18 +2,23 @@ module OpenGL
 (
 	Vertices,
 	ScreenBuffer,
+	toSize,
 	reshape,
 	display
 	)
 where
 
+import Foreign (newArray)
 import Graphics.UI.GLUT
 import Graphics.Rendering.OpenGL
 import Data.IORef
 import Render
 
 type Vertices d = [(Int,Int,d)]
-type ScreenBuffer = IORef (Vertices (Float,Float,Float))
+type ScreenBuffer = Vertices (Int,Int,Int)
+
+toSize :: (Integral a) => Area a -> Size
+toSize (Area (xl,xh) (yl,yh)) = Size (fromIntegral $ xh-xl) (fromIntegral $ yh-yl)
 
 reshape :: IORef (Area Float) -> ReshapeCallback
 reshape pixels winsize = do
@@ -22,18 +27,30 @@ reshape pixels winsize = do
 	where
 		toGLint = fromIntegral . truncate
 
+toImage :: [Render.Color Int] -> IO (PixelData (Color3 GLubyte))
+toImage ps = fmap (PixelData RGB UnsignedByte) $
+	newArray $
+	map (\(r,g,b) -> Color3 (toGLubyte r) (toGLubyte g) (toGLubyte b)) $
+	ps
+	where
+		toGLubyte :: Int -> GLubyte
+		toGLubyte = fromIntegral
 
-display :: ScreenBuffer -> DisplayCallback
-display buffer = do
+display :: Size -> [Render.Color Int] -> DisplayCallback
+display size@(Size w h) ps = do
 	-- viewport $= (Position (0) (0), Size 1 1)
+	
 	clear [ ColorBuffer ]
-	ps <- get buffer
-	(Size w h) <- get windowSize
-	let
-		convert x y = (toGLfloat x,toGLfloat y)
-		width = fromIntegral w
-		height = fromIntegral h
-
+	--let rasterPos2i = rasterPos :: Vertex2 GLint -> IO ()
+	--rasterPos2i (Vertex2 0 0)
+	case ps of
+		[] -> return ()
+		draw -> do 
+			pixels <- toImage draw
+			putStrLn $ show size
+			drawPixels size pixels
+			flush
+{-
 	
 	renderPrimitive Points $ mapM_ (\(x,y,(r,g,b)) -> do 
 		let 
@@ -44,3 +61,5 @@ display buffer = do
 	where
 		toGLfloat :: Real a => a -> GLfloat
 		toGLfloat = fromRational . toRational
+-}
+
