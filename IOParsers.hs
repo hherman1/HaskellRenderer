@@ -60,14 +60,15 @@ renderToFile (fname:args) par sbuf buffer@(Renderable scr out col mls mtri) = do
 			--_col = (maxColor * r, maxColor * g, maxColor * b),
 			_triangleMatrix = projCull (ex,ey,ez) mtri
 		}
+	writeFile fname $ showPPM out maxColor $ buf
 	--putStrLn . show $ render buffer
 	--writeFile "test.ppm" 
 	--putStrLn $ showPPM (Area (0,100) (0,100)) 255 $ 
-	(\b -> (putStrLn . show . bufToPPM (Area (0,10) (0,10)) $ b) >> (putStrLn . show $ b)) $ render $ buffer {
+	{-(\b -> (putStrLn . show . bufToPPM (Area (0,10) (0,10)) $ b) >> (putStrLn . show $ b)) $ render $ buffer {
 		_out = Area (0,10) (0,10),
 		_col = (100,100,100)
 		}
-	
+	-}
 
 renderFrameToFile :: (Matrix m) => [String] -> Parser m Float -> ScreenBuffer -> Renderable m Float -> IO ()
 renderFrameToFile (w:a) par@(Parse3D n _ _ _) sbuf buf = renderToFile

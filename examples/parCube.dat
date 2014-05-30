@@ -1,4 +1,4 @@
-screen -2 -2 2 2
+screen -10 -10 10 10
 pixels 400 400
 vary rot 1 40 1 40
 
@@ -8,6 +8,7 @@ sphere 1 10 1 1 .35 0 0 0 0 0 .35
 
 line 0 0 0 1 1 1
 
-nipple spinc 0 0 10 .6 .6 .6
+-spinc 0 0 10 .6 .6 .6
 render-perspective-cyclops 0 0 10
-file "test.ppm" 0 0 10
+files "bimbalimb" 0 0 10
+-file "test.ppm" 0 0 10
