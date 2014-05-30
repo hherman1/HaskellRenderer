@@ -1,0 +1,65 @@
+# object3d commands test with frames, variables, save/restore
+frames 1 100
+
+# the variables:
+vary finger1 1 50 0 30
+vary finger1 51 100 30 0
+vary finger2 1 50 0 45
+vary finger2 51 100 45 0
+vary finger3 1 50 0 60
+vary finger3 51 100 60 0
+vary turn 1 100 0 360
+
+screen -2 -2 2 2
+pixels 400 400
+
+rotate-y turn
+move 0 -0.5 0
+scale .75 .75 .75
+rotate-x 30
+
+# draw the palm
+#box-t 2.4 1.6 .75 0 0 0 0 0 0
+sphere 1 10 1.2 1 0.37 0 0 0 0 0 0
+
+# save the palm's coordinate system
+save palm
+
+#move to and draw first finger
+move 0.8 1 0
+rotate-x finger1
+box-t 0.2 1 0.2 0 0 0 0 0.7 0
+
+# move to and draw first post-finger
+move 0 1.2 0
+rotate-x finger1
+box-t 0.15 0.5 0.2 0 0 0 0 0.3 0
+
+# go back to palm's coordinate system
+restore palm
+
+# second finger
+move 0 1 0
+rotate-x finger2
+box-t 0.2 1 0.2 0 0 0 0 0.7 0
+
+# move to and draw second post-finger
+move 0 1.2 0
+rotate-x finger2
+box-t 0.15 0.5 0.2 0 0 0 0 0.3 0
+
+# third finger
+restore palm
+move -0.8 1 0
+rotate-x finger3
+box-t 0.2 1 0.2 0 0 0 0 0.7 0
+
+# move to and draw third post-finger
+move 0 1.2 0
+rotate-x finger3
+box-t 0.15 0.5 0.2 0 0 0 0 0.3 0
+
+render-perspective-cyclops 0 0 10
+files anim_save_
+#display 0.02
+end
