@@ -1,0 +1,46 @@
+# Animation homework problem #1
+frames 1 50
+#vary face 0 360 1 50
+vary right-ear 0 360 1 50
+vary left-ear 0 -360 1 50
+vary right-mouth 0 20 1 25
+vary right-mouth 20 0 25 50
+vary left-mouth 0 -20 1 25
+vary left-mouth -20 0 26 50
+vary eyes 0 180 1 50
+screen -3 -2 3 2
+pixels 600 400
+#rotate-y face
+box-t 3 2 .5 0 0 0 0 0 0
+sphere 1 10 .25 .25 .25 0 0 eyes .75 .5 .5
+sphere 1 10 .25 .25 .25 0 0 eyes -.75 .5 .5
+save origin
+
+# right mouth
+move 0 -.5 .25
+rotate-z right-mouth
+box-t .8 .2 .2 45 0 0 .5 0 0
+restore origin
+
+# left mouth
+move 0 -.5 .25
+rotate-z left-mouth
+box-t .8 .2 .2 45 0 0 -.5 0 0
+restore origin
+
+# right ear
+move 2.2 0 0
+rotate-y right-ear
+sphere 1 10 .5 .3 .3 0 0 0 0 .4 0
+restore origin
+
+#left ear
+move -2.2 0 0
+rotate-y left-ear
+sphere 1 10 .5 .3 .3 0 0 0 0 .4 0
+
+render-perspective-cyclops 0 4 8
+files ex2_ 0 4 8
+#display .01
+end
+
