@@ -24,7 +24,9 @@ defaultColor = (150,150,150)
 main :: IO ()
 main = do
 	(_progName,_args) <- getArgsAndInitialize
-	initialWindowSize $= Size (400 :: GLsizei) (400 :: GLsizei)
+	case _args of
+		(wx:wy:_) -> initialWindowSize $= Size (read wx) (read wy)
+		_ -> initialWindowSize $= Size 600 600
 	_window <- createWindow "im not sure i really understand what im doing in haskell" 
 	-- viewport $= (Position 0 0, Size 1000 1000)
 	-- pixels <- newIORef $ (Area (0,500) (0,500) :: Area Float)
