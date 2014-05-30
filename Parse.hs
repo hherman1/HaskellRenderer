@@ -36,7 +36,7 @@ varyFold fnum seq ws = foldr (f fnum seq) (Just []) ws
 parseVarys :: [String] -> Map String [Sequence Float]
 parseVarys [] = ML.fromList []
 parseVarys (l:ls) = let ws = words l in case ws of
-	("vary":varName:args) -> let (fs:fe:vs:ve:_) = map readFloat args in ML.insertWith (++) varName [Anim3D {
+	("vary":varName:args) -> let (vs:ve:fs:fe:_) = map readFloat args in ML.insertWith (++) varName [Anim3D {
 		_frames = (floor fs,floor fe),
 		_values = (vs,ve)
 	}] $ parseVarys ls
