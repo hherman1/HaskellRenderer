@@ -6,10 +6,8 @@ module Render
 	Resolution,
 	project, 
 	initRenderable,
-	renderFile,
 	render,
-	triToLine,
-	scaleLineMatrix,
+	pixelsGrid,
 	optimizeGrid,
 	cyan,
 	red,
@@ -56,14 +54,6 @@ perspective (ex,ey,ez) (px,py,pz) = (	ex - (ez * (px-ex)/(pz-ez)),
 initRenderable :: (Matrix m,Num a) => Workspace a -> Resolution a -> Color a -> Renderable m a
 initRenderable scr out col = Renderable scr out col [] []
 
-renderFile :: (Matrix m, RealFrac a, Ord a, Integral b) => Renderable m a -> [(b,b,b)]
-renderFile buffer@(Renderable scr out col mls mtri) = pixelsGridOM (wh out) (0,0,0) . map integralize . optimizeGrid $ render buffer
-	where 
-		wh :: (RealFrac a,Integral b) => Area a -> (b,b)
-		wh (Area (xl,xh) (yl,yh)) = (floor $ xh-xl,floor $ yh-yl)
-		integralize :: (Integral a,RealFrac b) => (a,a,(b,b,b)) -> (a,a,(a,a,a))
-		integralize (x,y,(r,g,b)) = (x,y,(truncate r,truncate g,truncate b))
-
 --Triangles
 
 triToLine :: (Matrix m) => m a -> [m a]
@@ -71,27 +61,46 @@ triToLine mat = let tri = rows mat in zipWith (\a b -> fromList $ [a,b]) tri $ d
 
 --renderLineMatrix :: (Matrix m,RealFrac a,Integral b) => [m a] -> Area a -> Area a -> (b,b,b) -> [(b,b,(b,b,b))]
 render :: (Matrix m, RealFrac a, Ord a, Integral b) => Renderable m a -> [(b,b,(a,a,a))]
-render (Renderable scr out col mls mtri) = sort . concat . flip renderPointArray col $ scaleLineMatrix lineMatrix scr out
-	where lineMatrix = mls ++ concatMap triToLine mtri
+render (Renderable scr out col mls mtri) = 
+	sort . concat 
+	. map (renderLine col) 
+	. map (scaleLine scr out)
+	. filter (inBounds scr) 
+	. map pairLines
+	. map rows $ lineMatrix
+	where 
+		lineMatrix = mls ++ concatMap triToLine mtri
+		pairLines ((x1:y1:_):(x2:y2:_):_) = ((x1,y1),(x2,y2))
 
-scaleLineMatrix :: (Matrix m, RealFrac a) => [m a] -> Area a -> Area a -> [[Point a]]
-scaleLineMatrix ls src scale = map ( map (toPixels src scale . (\(x:y:_) -> (x,y))) . rows) ls
 
-renderPointArray :: (Integral a,RealFrac b) => [[Point b]] -> (b,b,b) -> [[(a,a,(b,b,b))]]
-renderPointArray ls col = map (\(p1:p2:_) -> pixelLine (integralize p1) (integralize p2) col) ls
+inBounds (Area (lx,hx) (ly,hy)) ((x1,y1),(x2,y2)) = inRange (lx,hx) x1 && inRange (lx,hx) x2 && inRange (ly,hy) y1 && inRange (ly,hy) y2
+inRange (l,h) v = v >= l && v <= h
+
+scaleLine :: (RealFrac a) => Area a -> Area a -> ((a,a),(a,a)) -> ((a,a),(a,a))
+scaleLine src scale (p1,p2) = (toPixels src scale p1,toPixels src scale p2)
+
+renderLine :: (Integral a,RealFrac b) => (b,b,b) -> (Point b,Point b) -> [(a,a,(b,b,b))]
+renderLine col (p1,p2) = pixelLine col (integralize p1) (integralize p2)
 	where
 		integralize (a,b) = (floor a,floor b)
 
 toPixels :: Fractional a => Area a -> Area a -> Point a -> Point a
-toPixels src scale p = (sizeToRange (xRange src) (xRange scale) $ fst p, sizeToRange (yRange src) (yRange scale) $ snd p)
+toPixels src scale (x,y) = (	sizeToRange (xRange src) (xRange scale) x, 
+				sizeToRange (yRange src) (yRange scale) y)
 	where 
-		sizeToRange (l,h) (n,w) p = n + ((w-n) * (p-l)/(h-l))
+		sizeToRange (l1,h1) (l2,h2) v = l2 + ((h2-l2) * (v-l1)/(h1-l1))
 
 -- Bresenheim line algorithm
-pixelLine :: Integral a => (a,a) -> (a,a) -> (b,b,b) -> [(a,a,(b,b,b))] 
-pixelLine (x1,y1) (x2,y2) col
+pixelLine :: Integral a => (b,b,b) -> (a,a) -> (a,a) -> [(a,a,(b,b,b))] 
+pixelLine col (x1,y1) (x2,y2) 
 	| x1 == x2 = [(y,x1,col) | let ys = order y1 y2, y <- [snd ys..fst ys]]
-	| abs (x2 - x1) >= abs (y2 - y1) = [(y,x,col) |let axes = order (x1,y1) (x2,y2), let yDist = (snd (fst axes)) - (snd (snd axes)), let xDist = fst (fst axes) - fst (snd axes), x <- [fst (snd axes)..fst (fst axes)], let y = minor x xDist yDist axes]
+	| abs (x2 - x1) >= abs (y2 - y1) = 
+		[(y,x,col) |
+			let axes = order (x1,y1) (x2,y2), 
+			let yDist = (snd (fst axes)) - (snd (snd axes)), 
+			let xDist = fst (fst axes) - fst (snd axes), 
+			x <- [fst (snd axes)..fst (fst axes)], 
+			let y = minor x xDist yDist axes]
 	| otherwise = [(y,x,col) |let axes = order (y1,x1) (y2,x2), let xDist = (snd (fst axes)) - (snd (snd axes)), let yDist = fst (fst axes) - fst (snd axes), y <- [fst (snd axes)..fst (fst axes)],let x = minor y yDist xDist axes]
 	where
 		order p1 p2
@@ -119,8 +128,8 @@ genGrid (w,h) dat = [(y,x,dat) | y <- [0..h-1], x <- [0..w-1]]
 
 --STANDARD pixelsGrid function, used for final data retrieval
 -- fastest and optimized for all scenarios thanks to haskell's lazy eval
-pixelsGridOM :: Integral a => (a,a) -> (a,a,a) -> [(a,a,(a,a,a))] -> [(a,a,a)]
-pixelsGridOM (w,h) defaultPixel pixels = map getCol $ compilePixelsGrid pixels $ genGrid (w,h) defaultPixel
+pixelsGrid :: Integral a => (a,a) -> (a,a,a) -> [(a,a,(a,a,a))] -> [(a,a,a)]
+pixelsGrid (w,h) defaultPixel pixels = map getCol $ compilePixelsGrid pixels $ genGrid (w,h) defaultPixel
 
 getCol :: Integral a=> (a,a,(a,a,a)) -> (a,a,a)
 getCol (_,_,col) = col

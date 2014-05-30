@@ -25,7 +25,7 @@ move :: (Matrix m) => Float -> Float -> Float -> m Float
 move a b c = fromList $ [[1.0,0,0,0],[0,1.0,0,0],[0,0,1.0,0],[a,b,c,1.0]]
 
 scale :: (Matrix m) => Float -> Float -> Float -> m Float
-scale x y z = fromList $ [[x,0,0,0],[0,y,0,0],[0,0,z,0],[1,1,1,1]]
+scale x y z = fromList $ [[x,0,0,0],[0,y,0,0],[0,0,z,0],[0,0,0,1]]
 
 rotate :: (Matrix m) => Float -> Float -> Float -> m Float
 rotate x y z = matrixProduct (rotateX x) $ matrixProduct (rotateY y) $ rotateZ z

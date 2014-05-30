@@ -46,7 +46,7 @@ parseLoop [] _ _ buf = return buf
 parseLoop (l:ls) par@(Parse3D fnum varys _ _) sbuf buf = do
 	putStrLn $ "Line: " ++ unwords ws
 	fromMaybe (parseLoop ls par sbuf buf) -- Default case
-		$   (parseIO ws sbuf buf >>= Just . (>> parseLoop ls par sbuf buf ))
+		$   (parseIO ws par sbuf buf >>= Just . (>> parseLoop ls par sbuf buf ))
 		<|> (parseGeo ws par buf >>= Just . \nBuf ->  parseLoop ls par sbuf nBuf)
 		<|> (parseTrans ws par >>= Just . \nPar -> parseLoop ls nPar sbuf buf)
 		<|> parseControl ws ls par sbuf buf 
