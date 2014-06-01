@@ -11,11 +11,11 @@ sphere 1 10 1 1 1 30 0 0 0 0 0
 restore origin
 move 2 0 0
 rotate-x right-box
-box-t .5 2 .5 0 right-box  0 0 0 0
+cube .5 2 .5 0 right-box  0 0 0 0
 restore origin
 move -2 0 0
 rotate-y left-box
-box-t .5 2 .5 30 0 0 0 0 0
+cube .5 2 .5 30 0 0 0 0 0
 render-perspective-cyclops 0 0 10
 --files ex1_ 0 0 10
 end
