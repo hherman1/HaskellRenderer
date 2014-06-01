@@ -9,8 +9,8 @@ module Matrix3D
 	rotateZ,
 	toRad,
 	crossProduct,
-	parallelCheck,
-	backFace
+	normal,
+	isBackface
 	)
 where
 import Matrix
@@ -45,10 +45,16 @@ toRad t = t * pi / 180
 crossProduct :: Num a => [a] -> [a] -> [a]
 crossProduct (u1:u2:u3:_) (v1:v2:v3:_) = u2 * v3 - u3 * v2 : u3 * v1 - u1 * v3 : u1 * v2 - u2 * v1 : []
 
-parallelCheck :: (Num a, Ord a) => [[a]] -> Bool
-parallelCheck (v1:v2:v3:_) = let (x:y:z:_) = crossProduct v1 v2 in x >= 0
+normal :: (Num a) => [a] -> [a] -> [a] -> [a]
+normal p1 p2 p3 = crossProduct (zipWith (-) p2 p1) (zipWith (-) p3 p1)
+normal _ _ _ = error "Normals are undefined for non vector triangles"
 
+isBackface :: (Num a,Ord a) => [a] -> [[a]] -> Bool
+isBackface eye (p1:p2:p3:_) = let x = zipWith (-) eye p1 `dotProduct` normal p1 p2 p3 in x > 0
+
+{-
 backFace :: (Eq a, Ord a, Num a) => [a] -> [[a]] -> Bool
-backFace cam triangle = (>0) $ (take 3 $ zipWith (-) cam (head triangle)) `dotProduct` normal triangle
+backFace cam triangle = (>0) $ (take 3 $ zipWith (-) cam (head triangle)) `dotProduct` norm triangle
 	where 
-		normal tri = foldl1 crossProduct . zipWith (zipWith (-)) tri $ drop 1 tri 
+		norm tri = foldl1 crossProduct . zipWith (zipWith (-)) tri $ drop 1 tri 
+-}

@@ -11,7 +11,7 @@ currentSequence :: Int -> Sequence a -> Bool
 currentSequence f (Anim3D (fs,fe) _) = f >= fs && f <= fe
 
 seqVal :: (Num a,Fractional a) => Int -> Sequence a -> a
-seqVal fnum seq@(Anim3D (fs,fe) (vs,ve)) =
+seqVal fnum (Anim3D (fs,fe) (vs,ve)) =
 	case f (compare fnum fs) (compare fnum fe) of
 		LT -> vs
 		GT -> ve
