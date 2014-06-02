@@ -1,6 +1,7 @@
 module Operations (
 	cube,
-	sphere
+	sphere,
+	renderCyclops
 	) where
 import Matrix
 import Matrix3D

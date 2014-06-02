@@ -12,7 +12,7 @@ import qualified Data.Map as ML
 import Data.Maybe
 import Control.Applicative
 import Control.Monad.Trans.State
-
+import Control.Monad.IO.Class
 
 
 data RenderState m a = RenderState {_fnum :: Int, 
@@ -92,6 +92,12 @@ runCommand (AddVar s vv vf) = do
 		f x (a,b) = (x a, x b)
 		(vals,frames) = (f g vv,f (floor . g) vf)
 	modify $ \ss -> ss {_varys = ML.insertWith (++) s [Anim3D frames vals] vs}
+
+runCommand (RenderCyclops e) = do
+	RenderState {_varys = vs, _fnum = fnum, _renderable = renderable} <- get
+	let eye = getTransform (seqsVal fnum) vs e
+	liftIO $ renderCyclops eye renderable
+
 
 runCommand Unknown = return ()
 
