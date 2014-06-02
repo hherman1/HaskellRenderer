@@ -38,11 +38,7 @@ toImage ps = fmap (PixelData RGB UnsignedByte) $
 
 display :: Size -> [Render.Color Int] -> DisplayCallback
 display size@(Size w h) ps = do
-	-- viewport $= (Position (0) (0), Size 1 1)
-	
 	clear [ ColorBuffer ]
-	--let rasterPos2i = rasterPos :: Vertex2 GLint -> IO ()
-	--rasterPos2i (Vertex2 0 0)
 	case ps of
 		[] -> return ()
 		draw -> do 
@@ -50,16 +46,3 @@ display size@(Size w h) ps = do
 			putStrLn $ show size
 			drawPixels size pixels
 			flush
-{-
-	
-	renderPrimitive Points $ mapM_ (\(x,y,(r,g,b)) -> do 
-		let 
-			pair = convert (((fromIntegral x) - (width / 2)) / width) (((fromIntegral y)-(height / 2)) / height)
-		color $ Color3 (toGLfloat r) (toGLfloat g) (toGLfloat b)
-		vertex $ Vertex3 (snd pair) (- (fst pair)) 0 ) ps
-	flush
-	where
-		toGLfloat :: Real a => a -> GLfloat
-		toGLfloat = fromRational . toRational
--}
-
