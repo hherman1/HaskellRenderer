@@ -6,16 +6,18 @@ where
 
 import Data.IORef
 import Control.Monad
+import Text.Parsec
+import Control.Monad.Trans.State (evalStateT)
 
 import qualified Data.Map as ML
 
 import Graphics.UI.GLUT
 import Graphics.Rendering.OpenGL
 import OpenGL
-import Parse
-import ControlParsers
 import Render
 import Matrix
+import Parser
+import Execute
 
 defaultColor :: Render.Color Int
 defaultColor = (150,150,150) 
@@ -32,15 +34,37 @@ main = do
 	-- pixels <- newIORef $ (Area (0,500) (0,500) :: Area Float)
 	-- readInput buffer
 	displayCallback $= display (Size 0 0) []
-	idleCallback $= Just (do 
-		t <- readInput
-		postRedisplay Nothing)
+	idleCallback $= Just idleLoop
 	-- reshapeCallback $= Just (reshape pixels)
 	mainLoop
 
 windowArea :: Size -> Area Int
 windowArea (Size x y) = Area (0,fromIntegral x) (0,fromIntegral y)
 
+
+idleLoop :: IO ()
+idleLoop = do
+	winsize <- get windowSize
+	comms <- retrieve
+	cs <- readInput comms
+	putStrLn $ show cs
+	let 
+		defaultArea = Area (-2,2) (-2,2)
+		renderable = initRenderable 
+				defaultArea
+				(windowArea winsize)
+				defaultColor
+	mapM_ (evalStateT (mapM_ runCommand cs)) $ map ((flip genState) renderable) [1..100]
+	postRedisplay Nothing
+
+readInput :: String -> IO [Command]
+readInput comms = do
+	case parse parseContents "Reading input" comms of
+		(Left err) -> error $ "Error reading input:\n" ++ show err
+		(Right cs) -> do
+			return cs
+
+{-
 readInput :: IO (Renderable ListMatrix Float)
 readInput = do
 	winsize <- get windowSize
@@ -62,6 +86,7 @@ readInput = do
 	--output <- initParse (lines comms) (windowArea winsize) defaultColor
 	--buffer $= map (\(x,y,b) -> (toRational x, toRational y, b)) output
 	--buffer
+-}
 
 retrieve :: IO String
 retrieve = do
