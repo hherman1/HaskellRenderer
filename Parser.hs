@@ -1,6 +1,8 @@
 module Parser (
 	Val (..),
 	Command (..),
+	Transform,
+	parseContents,
 	parseCommand
 	) where
 import Text.Parsec
