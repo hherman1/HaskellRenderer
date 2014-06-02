@@ -18,9 +18,7 @@ type Transform a = (Val a, Val a, Val a)
 
 data Command = 	Cube (Transform Double) (Transform Double) (Transform Double) 
 		| Sphere (Val Double) (Val Double) (Transform Double) (Transform Double) (Transform Double)
-		| Scale (Transform Double)
-		| Rotate (Transform Double)
-		| Move (Transform Double)
+		| Transformation Method (Transform Double)
 		| Save String
 		| Restore String
 		| AddVar String (Val Double, Val Double) (Val Double, Val Double)
@@ -31,6 +29,8 @@ data Command = 	Cube (Transform Double) (Transform Double) (Transform Double)
 		| Files String
 		| Unknown
 	deriving Show
+
+data Method = Scale | Rotate | Move deriving Show
 
 retrieve x = x $ makeTokenParser haskellStyle
 
@@ -96,15 +96,15 @@ parseSphere = do
 
 parseScale = do
 	(x:y:z:_) <- comThenDoubles 3 "scale"
-	return $ Scale (x,y,z)
+	return $ Transformation Scale (x,y,z)
 
 parseRotate = do
 	(x:y:z:_) <- comThenDoubles 3 "rotate"
-	return $ Rotate (x,y,z)
+	return $ Transformation Rotate (x,y,z)
 
 parseMove = do
 	(x:y:z:_) <- comThenDoubles 3 "move"
-	return $ Move (x,y,z)
+	return $ Transformation Move (x,y,z)
 
 parseSave = do
 	string "save"
