@@ -1,4 +1,8 @@
-module Execute () where
+module Execute (
+	RenderState (..),
+	genState,
+	runCommand
+) where
 
 import Parser
 import Render
@@ -21,21 +25,21 @@ data RenderState m a = RenderState {_fnum :: Int,
 				_transformations :: Map String (m a),
 				_renderable :: Renderable m a}
 				deriving Show
-genState :: RenderState ListMatrix Double
-genState = RenderState 0 (ML.fromList []) (identity 4 4) (ML.fromList []) $
-	initRenderable (Area (0,100) (0,100)) (Area (0,100) (0,100)) (1,1,1)
+genState :: Int -> Renderable ListMatrix Double -> RenderState ListMatrix Double
+genState n = RenderState n (ML.fromList []) (identity 4 4) (ML.fromList [])
 
 testTransformationString = "scale 1 1 2\nmove 2 0 0\n save basic\nrotate 1 1 1\ncube 1 1 1 0 0 0 0 0 0\nrestore basic\ncube 1 1 1 0 0 0 0 0 0"
 
 test :: [Command] -> IO (RenderState ListMatrix Double)
-test cs = execStateT (mapM_ runCommand cs) genState
+test cs = execStateT (mapM_ runCommand cs) . genState 1 $
+	initRenderable (Area (0,100) (0,100)) (Area (0,100) (0,100)) (1,1,1)
 
 type Tform = (Double,Double,Double)
 
 				
 getValue :: (b -> a) -> Map String b -> Val a -> a
 getValue _ _ (Literal x) = x
-getValue f m (Variable s) = fromMaybe (error "var not found") $
+getValue f m (Variable s) = fromMaybe (error $ "var not found: " ++ s) $
 	f <$> ML.lookup s m
 
 getTransform :: (b -> a) -> Map String b -> Transform a -> (a,a,a)
