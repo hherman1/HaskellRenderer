@@ -45,7 +45,7 @@ green = (250,255,0) :: Color Int
 
 --POST--
 
-project :: Matrix m => (Float,Float,Float) -> [m Float] -> [m Float]
+project :: Matrix m => (Double,Double,Double) -> [m Double] -> [m Double]
 project (ex,ey,ez) m = map (Matrix.fromList . (map ((\(x,y,z) -> [x,y,z,1]) . (\(x:y:z:_)->perspective (ex,ey,ez) (x,y,z))) .  Matrix.rows)) m
 
 perspective (ex,ey,ez) (px,py,pz) = (	ex - (ez * (px-ex)/(pz-ez)), 
