@@ -15,8 +15,8 @@ pixels 400 400
 
 rotate-y turn
 move 0 -0.5 0
-scale .75 .75 .75
-rotate-x 30
+scale 0.75 0.75 0.75
+rotate 30 0 0
 
 # draw the palm
 #box-t 2.4 1.6 .75 0 0 0 0 0 0
@@ -27,37 +27,37 @@ save palm
 
 #move to and draw first finger
 move 0.8 1 0
-rotate-x finger1
-box-t 0.2 1 0.2 0 0 0 0 0.7 0
+rotate finger1 0 0 
+cube 0.2 1 0.2 0 0 0 0 0.7 0
 
 # move to and draw first post-finger
 move 0 1.2 0
-rotate-x finger1
-box-t 0.15 0.5 0.2 0 0 0 0 0.3 0
+rotate finger1 0 0
+cube 0.15 0.5 0.2 0 0 0 0 0.3 0
 
 # go back to palm's coordinate system
 restore palm
 
 # second finger
 move 0 1 0
-rotate-x finger2
-box-t 0.2 1 0.2 0 0 0 0 0.7 0
+rotate finger2 0 0
+cube 0.2 1 0.2 0 0 0 0 0.7 0
 
 # move to and draw second post-finger
 move 0 1.2 0
-rotate-x finger2
-box-t 0.15 0.5 0.2 0 0 0 0 0.3 0
+rotate finger2 0 0
+cube 0.15 0.5 0.2 0 0 0 0 0.3 0
 
 # third finger
 restore palm
 move -0.8 1 0
-rotate-x finger3
-box-t 0.2 1 0.2 0 0 0 0 0.7 0
+rotate finger3 0 0
+cube 0.2 1 0.2 0 0 0 0 0.7 0
 
 # move to and draw third post-finger
 move 0 1.2 0
-rotate-x finger3
-box-t 0.15 0.5 0.2 0 0 0 0 0.3 0
+rotate finger3 0 0
+cube 0.15 0.5 0.2 0 0 0 0 0.3 0
 
 render-perspective-cyclops 0 0 10
 -files anim_save_ 0 0 10
