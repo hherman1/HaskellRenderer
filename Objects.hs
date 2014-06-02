@@ -15,7 +15,7 @@ line x1 y1 z1 x2 y2 z2 = fromList $ [[x1,y1,z1,1],[x2,y2,z2,1]]
 
 --Cube
 
-unitCube :: (Matrix m) => [m Float]
+unitCube :: (Matrix m) => [m Double]
 unitCube = [
 	  fromList [tlf, trb, tlb],
 	  fromList [tlf, trf, trb],
@@ -46,10 +46,10 @@ unitCube = [
 		brb = [0.5,-0.5,-0.5,1]
 --Spheres 
 
-sphere :: (Matrix m) => Float -> Int -> [m Float]
+sphere :: (Matrix m) => Double -> Int -> [m Double]
 sphere r divs = connectArcs $ genRotations divs $ arc r divs
 	where 
-		connectArcs :: (Matrix m) => [m Float] -> [m Float]
+		connectArcs :: (Matrix m) => [m Double] -> [m Double]
 		-- connectArcs arcs = let arc = map rows arcs in (concat $ map fromList arc) ++ (concat $ map fromList  . Matrix.transpose' $ arc) -- (concat $ map traceMatrix $ Matrix.transpose' arcs) -- zipWith (map traceMatrix) arcs (drop 1 arcs))
 		connectArcs arcs = let arc = map rows arcs in (concat $ map traceMatrix arcs) ++ (concat $ zipWith (zipWith (\a b -> Matrix.fromList [a,b])) arc (drop 1 arc))
 		traceMatrix m = let mr = rows m in zipWith (\a b -> Matrix.fromList $ [a,b]) mr (drop 1 mr) 
@@ -57,7 +57,7 @@ sphere r divs = connectArcs $ genRotations divs $ arc r divs
 -- test
 test = 4
 -- no testing
-sphereTri :: (Matrix m) => Float -> Int -> [m Float]
+sphereTri :: (Matrix m) => Double -> Int -> [m Double]
 sphereTri r divs = let arcs = genRotations divs $ arc r divs in mZipTri arcs
 	where
 		mZipTri :: (Matrix m) => [m a] -> [m a]
@@ -69,8 +69,8 @@ sphereTri r divs = let arcs = genRotations divs $ arc r divs in mZipTri arcs
 zipTri :: [a] -> [a] -> [[a]]
 zipTri p q = zipWith (\a (b,c) -> [a,b,c]) p . zip q $ drop 1 q
 
-genRotations :: (Matrix m, Integral a) => a -> m Float -> [m Float]
+genRotations :: (Matrix m, Integral a) => a -> m Double -> [m Double]
 genRotations divs = take (1 + fromIntegral divs) . iterate ((flip matrixProduct) (rotateY $ 360 / fromIntegral divs))
 
-arc :: (Integral a, Matrix m) => Float -> a -> m Float
+arc :: (Integral a, Matrix m) => Double -> a -> m Double
 arc r divs = fromList $ [ [r * sin (qu *  pi / fromIntegral divs), r * cos (qu *  pi / fromIntegral divs), 0, 1 ] | t <- [1..divs], let qu = fromIntegral t]

@@ -21,25 +21,25 @@ transform = flip matrixProduct
 collate :: (Matrix m, Num a) => [m a] -> m a
 collate = foldr1 matrixProduct
 
-move :: (Matrix m) => Float -> Float -> Float -> m Float
-move a b c = fromList $ [[1.0,0,0,0],[0,1.0,0,0],[0,0,1.0,0],[a,b,c,1.0]]
+move :: (Matrix m) => (Double,Double,Double) -> m Double
+move (a,b,c) = fromList $ [[1.0,0,0,0],[0,1.0,0,0],[0,0,1.0,0],[a,b,c,1.0]]
 
-scale :: (Matrix m) => Float -> Float -> Float -> m Float
-scale x y z = fromList $ [[x,0,0,0],[0,y,0,0],[0,0,z,0],[0,0,0,1]]
+scale :: (Matrix m) => (Double,Double,Double) -> m Double
+scale (x,y,z) = fromList $ [[x,0,0,0],[0,y,0,0],[0,0,z,0],[0,0,0,1]]
 
-rotate :: (Matrix m) => Float -> Float -> Float -> m Float
-rotate x y z = matrixProduct (rotateX x) $ matrixProduct (rotateY y) $ rotateZ z
+rotate :: (Matrix m) => (Double,Double,Double) -> m Double
+rotate (x,y,z) = matrixProduct (rotateX x) $ matrixProduct (rotateY y) $ rotateZ z
 
-rotateX :: (Matrix m) => Float -> m Float
+rotateX :: (Matrix m) => Double -> m Double
 rotateX deg = let a = toRad deg in fromList $ [[1.0,0,0,0],[0,cos a, (-sin a),0],[0,(sin a),cos a, 0],[0,0,0,1.0]]
 
-rotateY :: (Matrix m) => Float -> m Float
+rotateY :: (Matrix m) => Double -> m Double
 rotateY deg = let a = toRad deg in fromList $ [[cos a,0,(sin a),0],[0,1,0,0],[(-sin a),0,cos a,0],[0,0,0,1]]
 
-rotateZ :: (Matrix m) => Float -> m Float
+rotateZ :: (Matrix m) => Double -> m Double
 rotateZ deg = let a = toRad deg in fromList $ [[cos a,(-sin a),0,0],[(sin a),cos a,0,0],[0,0,1,0],[0,0,0,1]]
 
-toRad :: Float -> Float
+toRad :: Double -> Double
 toRad t = t * pi / 180
 
 crossProduct :: Num a => [a] -> [a] -> [a]
