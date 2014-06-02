@@ -24,7 +24,10 @@ data RenderState m a = RenderState {_fnum :: Int,
 				_currentTransform :: m a,
 				_transformations :: Map String (m a),
 				_renderable :: Renderable m a}
-				deriving Show
+
+instance Show (RenderState m a) where
+	show (Renderstate n vs cst ts renderable) = foldr1 (++) $ intersperse "\n" $ [show n,show vs,show vst,show ts, "Renderable"]
+
 genState :: Int -> Renderable ListMatrix Double -> RenderState ListMatrix Double
 genState n = RenderState n (ML.fromList []) (identity 4 4) (ML.fromList [])
 
