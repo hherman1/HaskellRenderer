@@ -38,6 +38,14 @@ retrieve x = x $ makeTokenParser haskellStyle
 
 double :: Parser Double
 double = do
+	try $ do
+		char '-'
+		num <- number
+		return $ -1 * num
+	<|> number
+
+number :: Parser Double
+number = do
 	try $ retrieve float
 	<|> do
 		i <- retrieve integer
