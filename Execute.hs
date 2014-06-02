@@ -65,23 +65,15 @@ runCommand (Sphere rad div ts tr tm:cs) = do
 				getValue (seqsVal fnum) vs div)
 	transformAndUpdateTri $ sphere radius division s r m
 	runCommand cs
-runCommand (Scale st:cs) = do
+runCommand (Transformation mode st:cs) = do
 	RenderState {_varys = vs, _fnum = fnum, _currentTransform = cst} <- get
 	let s = getTransform (seqsVal fnum) vs st
-	modify $ \ss -> ss {_currentTransform = transform cst $ scale s}
+	modify $ \ss -> ss {_currentTransform = transform cst $ case mode of
+		Scale -> scale s
+		Rotate -> rotate s
+		Move -> move s}
 	runCommand cs
 
-runCommand (Rotate rt:cs) = do
-	RenderState {_varys = vs, _fnum = fnum, _currentTransform = cst} <- get
-	let r = getTransform (seqsVal fnum) vs rt
-	modify $ \ss -> ss {_currentTransform = transform cst $ rotate r}
-	runCommand cs
-
-runCommand (Move mt:cs) = do
-	RenderState {_varys = vs, _fnum = fnum, _currentTransform = cst} <- get
-	let m = getTransform (seqsVal fnum) vs mt
-	modify $ \ss -> ss {_currentTransform = transform cst $ move m}
-	runCommand cs
 
 runCommand (AddVar s vv vf:cs) = do
 	RenderState {_varys = vs, _fnum = fnum} <- get

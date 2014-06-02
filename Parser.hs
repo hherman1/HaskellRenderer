@@ -1,6 +1,7 @@
 module Parser (
 	Val (..),
 	Command (..),
+	Method (..),
 	Transform,
 	parseContents,
 	parseCommand
