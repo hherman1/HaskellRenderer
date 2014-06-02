@@ -25,8 +25,10 @@ genState :: RenderState ListMatrix Double
 genState = RenderState 0 (ML.fromList []) (identity 4 4) (ML.fromList []) $
 	initRenderable (Area (0,100) (0,100)) (Area (0,100) (0,100)) (1,1,1)
 
+testTransformationString = "scale 1 1 2\nmove 2 0 0\n save basic\nrotate 1 1 1\ncube 1 1 1 0 0 0 0 0 0\nrestore basic\ncube 1 1 1 0 0 0 0 0 0"
+
 test :: [Command] -> IO (RenderState ListMatrix Double)
-test cs = execStateT (runCommand cs) genState
+test cs = execStateT (mapM_ runCommand cs) genState
 
 type Tform = (Double,Double,Double)
 
@@ -47,16 +49,18 @@ transformAndUpdateTri tris = do
 					(map (transform cst) $ tris)
 					++ _triangleMatrix rm }}
 
-runCommand :: (Matrix m) => [Command] -> StateT (RenderState m Double) IO ()
-runCommand [] = return ()
-runCommand (Cube ts tr tm:cs) = do
+
+--The funky bits at the beginning of each op are extracting data from the Val's, whcih are potentially variable
+runCommand :: (Matrix m) => Command -> StateT (RenderState m Double) IO ()
+
+runCommand (Cube ts tr tm) = do
 	RenderState {_fnum = fnum, _varys = vs} <- get
 	let 	
 		gt = getTransform (seqsVal fnum) vs
 		(s,r,m) = (gt ts,gt tr,gt tm)
 	transformAndUpdateTri $ cube s r m
-	runCommand cs
-runCommand (Sphere rad div ts tr tm:cs) = do
+
+runCommand (Sphere rad div ts tr tm) = do
 	RenderState {_fnum = fnum, _varys = vs} <- get
 	let 	
 		gt = getTransform (seqsVal fnum) vs
@@ -64,26 +68,30 @@ runCommand (Sphere rad div ts tr tm:cs) = do
 		(radius,division) = (getValue (seqsVal fnum) vs rad,
 				getValue (seqsVal fnum) vs div)
 	transformAndUpdateTri $ sphere radius division s r m
-	runCommand cs
-runCommand (Transformation mode st:cs) = do
+
+runCommand (Transformation mode st) = do
 	RenderState {_varys = vs, _fnum = fnum, _currentTransform = cst} <- get
 	let s = getTransform (seqsVal fnum) vs st
 	modify $ \ss -> ss {_currentTransform = transform cst $ case mode of
 		Scale -> scale s
 		Rotate -> rotate s
 		Move -> move s}
-	runCommand cs
 
+runCommand (Save s) = do
+	modify $ \ss@(RenderState {_currentTransform = cst}) ->
+		ss {_transformations = ML.insert s cst $ _transformations ss}
 
-runCommand (AddVar s vv vf:cs) = do
+runCommand (Restore s) = do
+	modify $ \ss -> ss {_currentTransform = fromMaybe (error "transform not found") $
+		ML.lookup s $ _transformations ss}
+
+runCommand (AddVar s vv vf) = do
 	RenderState {_varys = vs, _fnum = fnum} <- get
 	let 
 		g = getValue (seqsVal fnum) vs
 		f x (a,b) = (x a, x b)
 		(vals,frames) = (f g vv,f (floor . g) vf)
 	modify $ \ss -> ss {_varys = ML.insertWith (++) s [Anim3D frames vals] vs}
-	runCommand cs
 
-runCommand (Unknown:cs) = do
-	runCommand cs
+runCommand Unknown = return ()
 
