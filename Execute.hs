@@ -113,7 +113,7 @@ runCommand Display = do
 
 runCommand (Files s) = do
 	RenderState {_fnum = fnum,
-		_buffer = buf
+		_buffer = buf,
 		_renderable=(Renderable {_out = out})} <- get
 	liftIO $ writeFrame s fnum out buf
 
