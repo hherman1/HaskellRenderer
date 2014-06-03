@@ -39,8 +39,7 @@ sphere rad divs s r m = (flip map) (sphereTri rad (floor divs))
 	$ transform (collate [scale s, rotate r, move m])
 
 renderCyclops :: (Matrix m) => Tform -> Renderable m Double -> [Color Int]
-renderCyclops eye buffer@(Renderable scr out col mls mtri) = do
-	putStrLn "Rendering cyclops"
+renderCyclops eye buffer@(Renderable scr out col mls mtri) = 
 	bufToPPM out $ 
 		(render $ projectGeometry eye buffer :: [(Int,Int,Color Int)])
 
