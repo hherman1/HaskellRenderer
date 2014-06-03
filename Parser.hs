@@ -29,6 +29,7 @@ data Command = 	Cube (Transform Double) (Transform Double) (Transform Double)
 		| RenderParallel
 		| RenderCyclops (Transform Double)
 		| RenderStereo (Transform Double) (Transform Double)
+		| Display
 		| File String
 		| Files String
 		| Unknown
@@ -88,6 +89,7 @@ parseCommand = choice $ map try [
 	parseRenderParallel,
 	parseRenderCyclops,
 	parseRenderStereo,
+	parseDisplay,
 	parseFile,
 	parseFiles,
 	(manyTill anyToken newline) >> return Unknown
@@ -97,7 +99,7 @@ parseCube,parseSphere,
 	parseScale,parseRotate,parseMove,
 	parseSave,parseRestore,parseVar,
 	parseRenderParallel,parseRenderCyclops,parseRenderStereo,
-	parseFile,parseFiles :: Parser Command
+	parseDisplay,parseFile,parseFiles :: Parser Command
 parseCube = do
 	(sx:sy:sz:rx:ry:rz:mx:my:mz:_) <- comThenDoubles 9 "cube"
 	return $ Cube (sx,sy,sz) (rx,ry,rz) (mx,my,mz)
@@ -149,6 +151,11 @@ parseRenderCyclops = do
 parseRenderStereo = do
 	(lx:ly:lz:rx:ry:rz:_) <- comThenDoubles 6 "render-perspective-stereo"
 	return $ RenderStereo (lx,ly,lz) (rx,ry,rz)
+
+parseDisplay = do
+	string "display"
+	many space
+	return Display
 
 parseFile = do
 	string "file"

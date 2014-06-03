@@ -24,7 +24,8 @@ data RenderState m a = RenderState {_fnum :: Int,
 				_varys :: Map String [Sequence Double],
 				_currentTransform :: m a,
 				_transformations :: Map String (m a),
-				_renderable :: Renderable m a}
+				_renderable :: Renderable m a,
+				_buffer :: [Color Int]}
 				deriving Show
 genState :: Int -> Renderable ListMatrix Double -> RenderState ListMatrix Double
 genState n = RenderState n (ML.fromList []) (identity 4 4) (ML.fromList [])
@@ -101,11 +102,20 @@ runCommand (AddVar s vv vf) = do
 runCommand (RenderCyclops e) = do
 	RenderState {_varys = vs, _fnum = fnum, _renderable = renderable} <- get
 	let eye = getTransform (seqsVal fnum) vs e
-	liftIO $ renderCyclops eye renderable
+	modify $ \ss -> ss {_buffer = renderCyclops eye renderable}
+--TODO:
+--Bring the "out" from renderable to the top level of RenderState
+--pass the out as an argument to render, still consistant design
+
+runCommand Display = do
+	RenderState {_buffer = buf,_renderable = (Renderable {_out = out})} <- get
+	display out buf
 
 runCommand (Files s) = do
-	RenderState {_fnum = fnum,_renderable=renderable} <- get
-	liftIO $ writeFrame s fnum renderable
+	RenderState {_fnum = fnum,
+		_buffer = buf
+		_renderable=(Renderable {_out = out})} <- get
+	liftIO $ writeFrame s fnum out buf
 
 runCommand Unknown = return ()
 

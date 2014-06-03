@@ -50,7 +50,7 @@ normal p1 p2 p3 = crossProduct (zipWith (-) p2 p1) (zipWith (-) p3 p1)
 normal _ _ _ = error "Normals are undefined for non vector triangles"
 
 parallelBackface :: (Num a, Ord a) => [[a]] -> Bool
-parallelBaface (p1:p2:p3:_) = let (_:_:z:_) = normal p1 p2 p3 in z > 0
+parallelBackface (p1:p2:p3:_) = let (_:_:z:_) = normal p1 p2 p3 in z > 0
 
 isBackface :: (Num a,Ord a) => [a] -> [[a]] -> Bool
 isBackface eye (p1:p2:p3:_) = let x = zipWith (-) eye p1 `dotProduct` normal p1 p2 p3 in x > 0

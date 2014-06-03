@@ -43,11 +43,10 @@ renderCyclops eye buffer@(Renderable scr out col mls mtri) =
 	bufToPPM out $ 
 		(render $ projectGeometry eye buffer :: [(Int,Int,Color Int)])
 
-writePPM :: (Matrix m) => String -> Renderable m Double -> IO ()
-writePPM s buffer@(Renderable {_out = out}) = do
-	writeFile s $ showPPM out maxColor $ 
-		bufToPPM out $ renderCyclops buffer
+writePPM :: String -> Resolution Int -> [Color Int] -> IO ()
+writePPM s out buffer = do
+	writeFile s $ showPPM out maxColor buffer
 
-writeFrame :: (Matrix m) => String -> Int -> Renderable m Double -> IO ()
-writeFrame s fnum buffer = do 
-	writePPM (printf "%s%05d.ppm" s fnum) buffer
+writeFrame :: String -> Int -> Resolution Int -> [Color Int] -> IO ()
+writeFrame s fnum out buffer = do 
+	writePPM (printf "%s%05d.ppm" s fnum) out buffer
