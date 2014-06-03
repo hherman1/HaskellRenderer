@@ -1,3 +1,4 @@
 vary Hunter 0 90 1 50
 cube 1 1 1 Hunter Hunter Hunter 0 0 0
 render-perspective-cyclops 0 0 10
+files cube

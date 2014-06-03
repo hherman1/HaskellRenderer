@@ -152,12 +152,12 @@ parseRenderStereo = do
 
 parseFile = do
 	string "file"
-	many space
-	fName <- many $ satisfy (/= ' ')
+	many1 space
+	fName <- manyTill anyToken space
 	return $ File fName
 
 parseFiles = do
 	string "files"
-	many space
-	fName <- many $ satisfy (/= ' ')
+	many1 space
+	fName <- manyTill anyToken space 
 	return $ Files fName

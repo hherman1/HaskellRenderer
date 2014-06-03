@@ -105,6 +105,10 @@ runCommand (RenderCyclops e) = do
 
 runCommand (Files s) = do
 	RenderState {_fnum = fnum,_renderable=renderable} <- get
+	liftIO $ writeFrame s fnum renderable
 
 runCommand Unknown = return ()
 
+--Debug
+runCommand c = do
+	liftIO $ putStrLn $ show c
