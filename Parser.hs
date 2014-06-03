@@ -17,6 +17,9 @@ data Val a = Literal a | Variable String
 
 type Transform a = (Val a, Val a, Val a)
 
+data Maybe a = Nothing | Just a
+
+
 data Command = 	Cube (Transform Double) (Transform Double) (Transform Double) 
 		| Sphere (Val Double) (Val Double) (Transform Double) (Transform Double) (Transform Double)
 		| Transformation Method (Transform Double)
@@ -133,7 +136,7 @@ parseVar = do
 	varName <- many1 $ satisfy (/= ' ')
 	many space
 	(vs:ve:fs:fe:_) <- count 4 $ many space >> doubleVal 
-	return $ AddVar varName (vs,ve) (fs,ve)
+	return $ AddVar varName (vs,ve) (fs,fe)
 
 parseRenderParallel = do
 	string "render-parallel"

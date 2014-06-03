@@ -14,6 +14,7 @@ import Sequence
 import Data.Map (Map)
 import qualified Data.Map as ML
 import Data.Maybe
+import Data.List (intersperse)
 import Control.Applicative
 import Control.Monad.Trans.State
 import Control.Monad.IO.Class
@@ -24,10 +25,7 @@ data RenderState m a = RenderState {_fnum :: Int,
 				_currentTransform :: m a,
 				_transformations :: Map String (m a),
 				_renderable :: Renderable m a}
-
-instance Show (RenderState m a) where
-	show (Renderstate n vs cst ts renderable) = foldr1 (++) $ intersperse "\n" $ [show n,show vs,show vst,show ts, "Renderable"]
-
+				deriving Show
 genState :: Int -> Renderable ListMatrix Double -> RenderState ListMatrix Double
 genState n = RenderState n (ML.fromList []) (identity 4 4) (ML.fromList [])
 
@@ -105,6 +103,8 @@ runCommand (RenderCyclops e) = do
 	let eye = getTransform (seqsVal fnum) vs e
 	liftIO $ renderCyclops eye renderable
 
+runCommand (Files s) = do
+	RenderState {_fnum = fnum,_renderable=renderable} <- get
 
 runCommand Unknown = return ()
 
