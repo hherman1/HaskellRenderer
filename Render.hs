@@ -21,7 +21,6 @@ import Matrix
 
 data Renderable m a = Renderable {
 	_screen :: Workspace a,
-	_out :: Resolution Int,
 	_col :: Color Int, 
 	_lineMatrix :: [m a], 
 	_triangleMatrix :: [m a]
@@ -56,8 +55,8 @@ perspective (ex,ey,ez) (px,py,pz) = (	ex - (ez * (px-ex)/(pz-ez)),
 -------------------
 
 
-initRenderable :: (Matrix m,Num a) => Workspace a -> Resolution Int -> Color Int -> Renderable m a
-initRenderable scr out col = Renderable scr out col [] []
+initRenderable :: (Matrix m,Num a) => Workspace a -> Color Int -> Renderable m a
+initRenderable scr col = Renderable scr col [] []
 
 --Triangles
 
@@ -65,8 +64,8 @@ triToLine :: (Matrix m) => m a -> [m a]
 triToLine mat = let tri = rows mat in zipWith (\a b -> fromList $ [a,b]) tri $ drop 1 (cycle tri)
 
 --renderLineMatrix :: (Matrix m,RealFrac a,Integral b) => [m a] -> Area a -> Area a -> (b,b,b) -> [(b,b,(b,b,b))]
-render :: (Matrix m, Integral b,RealFrac a) => Renderable m a -> [(b,b,Color Int)]
-render (Renderable scr out col mls mtri) = 
+render :: (Matrix m, Integral b,RealFrac a) => Resolution Int -> Renderable m a -> [(b,b,Color Int)]
+render out (Renderable scr col mls mtri) = 
 	optimizeGrid . sort . concat 
 	. map (renderLine col) 
 	. map (scaleLine scr (fmap fromIntegral out))

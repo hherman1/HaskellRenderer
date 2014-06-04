@@ -38,10 +38,10 @@ sphere :: (Matrix m) => Double -> Double -> Tform -> Tform -> Tform -> [m Double
 sphere rad divs s r m = (flip map) (sphereTri rad (floor divs)) 
 	$ transform (collate [scale s, rotate r, move m])
 
-renderCyclops :: (Matrix m) => Tform -> Renderable m Double -> [Color Int]
-renderCyclops eye buffer@(Renderable scr out col mls mtri) = 
+renderCyclops :: (Matrix m) => Resolution Int -> Tform -> Renderable m Double -> [Color Int]
+renderCyclops out eye buffer@(Renderable scr col mls mtri) = 
 	bufToPPM out $ 
-		(render $ projectGeometry eye buffer :: [(Int,Int,Color Int)])
+		(render out $ projectGeometry eye buffer :: [(Int,Int,Color Int)])
 
 writePPM :: String -> Resolution Int -> [Color Int] -> IO ()
 writePPM s out buffer = do

@@ -52,9 +52,9 @@ idleLoop = do
 		defaultArea = Area (-2,2) (-2,2)
 		renderable = initRenderable 
 				defaultArea
-				(windowArea winsize)
 				defaultColor
-	mapM_ (evalStateT (mapM_ runCommand cs)) $ map ((flip genState) renderable) [1..100]
+	mapM_ (evalStateT (mapM_ runCommand cs)) $ 
+		map (genState renderable (windowArea winsize)) [1..100]
 	postRedisplay Nothing
 
 readInput :: String -> IO [Command]

@@ -6,10 +6,12 @@ module Execute (
 
 import Parser
 import Render
+import OpenGL
 import Operations
 import Matrix
 import Matrix3D
 import Sequence
+
 
 import Data.Map (Map)
 import qualified Data.Map as ML
@@ -25,16 +27,19 @@ data RenderState m a = RenderState {_fnum :: Int,
 				_currentTransform :: m a,
 				_transformations :: Map String (m a),
 				_renderable :: Renderable m a,
+				_out :: Resolution Int,
 				_buffer :: [Color Int]}
 				deriving Show
-genState :: Int -> Renderable ListMatrix Double -> RenderState ListMatrix Double
-genState n = RenderState n (ML.fromList []) (identity 4 4) (ML.fromList [])
+genState :: Renderable ListMatrix Double -> Resolution Int -> Int -> RenderState ListMatrix Double
+genState renderable out n= RenderState n (ML.fromList []) (identity 4 4) (ML.fromList []) renderable out []
 
 testTransformationString = "scale 1 1 2\nmove 2 0 0\n save basic\nrotate 1 1 1\ncube 1 1 1 0 0 0 0 0 0\nrestore basic\ncube 1 1 1 0 0 0 0 0 0"
 
 test :: [Command] -> IO (RenderState ListMatrix Double)
-test cs = execStateT (mapM_ runCommand cs) . genState 1 $
-	initRenderable (Area (0,100) (0,100)) (Area (0,100) (0,100)) (1,1,1)
+test cs = execStateT (mapM_ runCommand cs) . genState 
+	(initRenderable  (Area (0,100) (0,100)) (1,1,1))
+	(Area (0,100) (0,100)) $
+	1 
 
 type Tform = (Double,Double,Double)
 
@@ -100,21 +105,22 @@ runCommand (AddVar s vv vf) = do
 	modify $ \ss -> ss {_varys = ML.insertWith (++) s [Anim3D frames vals] vs}
 
 runCommand (RenderCyclops e) = do
-	RenderState {_varys = vs, _fnum = fnum, _renderable = renderable} <- get
+	RenderState {_varys = vs, _fnum = fnum, 
+		_renderable = renderable,_out = out} <- get
 	let eye = getTransform (seqsVal fnum) vs e
-	modify $ \ss -> ss {_buffer = renderCyclops eye renderable}
+	modify $ \ss -> ss {_buffer = renderCyclops out eye renderable}
 --TODO:
 --Bring the "out" from renderable to the top level of RenderState
 --pass the out as an argument to render, still consistant design
 
 runCommand Display = do
-	RenderState {_buffer = buf,_renderable = (Renderable {_out = out})} <- get
-	display out buf
+	RenderState {_buffer = buf,_out = out} <- get
+	liftIO $ display (toSize out) buf
 
 runCommand (Files s) = do
 	RenderState {_fnum = fnum,
 		_buffer = buf,
-		_renderable=(Renderable {_out = out})} <- get
+		_out = out} <- get
 	liftIO $ writeFrame s fnum out buf
 
 runCommand Unknown = return ()
