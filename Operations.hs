@@ -18,6 +18,8 @@ import Text.Printf
 
 import System.IO
 
+import Data.List (sort)
+
 type Tform = (Double,Double,Double)
 type Eye = Tform
 
@@ -30,7 +32,7 @@ projectGeometry eye buffer@
 	(Renderable {_lineMatrix = mls,
 	_triangleMatrix = mtri}) 
 	= buffer {
-		_col = green, 
+--		_col = green, 
 		_lineMatrix = project eye mls,
 		_triangleMatrix = projCull eye mtri
 	}
@@ -56,8 +58,8 @@ renderCyclops out eye buffer =
 
 renderStereo :: (Matrix m) => Resolution Int -> (Eye,Eye) -> Renderable m Double -> [Color Int]
 renderStereo out (e1,e2) buffer = 
-	bufToPPM out $ (render out $ projectGeometry e1 buffer)
-		++ (render out $ projectGeometry e2 buffer)
+	bufToPPM out . sort $ (render out $ projectGeometry e1 $ buffer {_col = cyan})
+		++ (render out $ projectGeometry e2 $ buffer{_col = red})
 
 writePPM :: String -> Resolution Int -> [Color Int] -> IO ()
 writePPM s out buffer = do
