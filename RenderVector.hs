@@ -5,9 +5,10 @@ import Render
 import Matrix
 --renderVector :: (Matrix m,RealFrac a) => Resolution Int -> Renderable m a -> (Vector Int,Vector (Color Int))
 
-renderVector :: (Matrix m,RealFrac a) => Resolution Int -> Renderable m a -> [Vector ((Int,Int),Color Int)]
-renderVector out (Renderable scr col mls mtri) = 
-	map (pixelLineVector col)
+renderVector :: (Matrix m,RealFrac a) => Resolution Int -> Renderable m a -> [Vector (Int,Color Int)]
+renderVector out@(Area _ (_,oy)) (Renderable scr col mls mtri) = 
+	map (V.map (\((x,y),c) -> (y * oy + x,c)))
+	. map (pixelLineVector col)
 	. map (\((a,b),(c,d)) -> ((floor a, floor b),(floor c,floor d)))
 	. map (scaleLine scr (fmap fromIntegral out))
 	. filter (inBounds scr) 
