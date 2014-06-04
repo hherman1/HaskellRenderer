@@ -19,6 +19,8 @@ import Matrix
 import Parser
 import Execute
 
+import qualified Data.Vector.Storable as V (replicate)
+
 defaultColor :: Color3 GLubyte
 defaultColor = Color3 150 150 150 
 
@@ -44,7 +46,7 @@ windowArea (Size x y) = Area (0,fromIntegral x) (0,fromIntegral y)
 
 idleLoop :: IO ()
 idleLoop = do
-	winsize <- get windowSize
+	winsize@(Size ox oy) <- get windowSize
 	comms <- retrieve
 	cs <- readInput comms
 	putStrLn $ show cs
@@ -54,8 +56,12 @@ idleLoop = do
 				defaultArea
 				defaultColor
 	mapM_ (evalStateT (mapM_ runCommand cs)) $ 
-		map (genState renderable (Color3 0 0 0) (windowArea winsize)) [1..100]
+		map (genState renderable (V.replicate (fromIntegral ox * fromIntegral oy) (Color3 0 0 0)) (windowArea winsize) $) [1..100]
 	postRedisplay Nothing
+
+--runFrame :: [Command] -> Int -> IO RenderState m a d -> IO RenderState m a d
+--runFrame cs fnum lastState = do
+--	state <- lastState
 
 readInput :: String -> IO [Command]
 readInput comms = do

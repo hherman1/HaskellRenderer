@@ -32,10 +32,10 @@ data RenderState m a d = RenderState {_fnum :: Int,
 				_out :: Resolution Int,
 				_buffer :: Vector (d)}
 				deriving Show
-genState :: (V.Storable d) => Renderable ListMatrix Double d -> d -> Resolution Int -> Int -> RenderState ListMatrix Double d
-genState renderable@(Renderable {_col=col}) v out@(Area (_,ox) (_,oy))  n= 
+genState :: (V.Storable d) => Renderable ListMatrix Double d -> Vector d -> Resolution Int -> Int -> RenderState ListMatrix Double d
+genState renderable@(Renderable {_col=col}) v out  n= 
 	RenderState n (ML.fromList []) (identity 4 4) (ML.fromList []) 
-		renderable out $ V.replicate (ox * oy) v
+		renderable out $ v
 
 testTransformationString = "scale 1 1 2\nmove 2 0 0\n save basic\nrotate 1 1 1\ncube 1 1 1 0 0 0 0 0 0\nrestore basic\ncube 1 1 1 0 0 0 0 0 0"
 {-

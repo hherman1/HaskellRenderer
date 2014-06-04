@@ -61,9 +61,10 @@ triToLine :: (Matrix m) => m a -> [m a]
 triToLine mat = let tri = rows mat in zipWith (\a b -> fromList $ [a,b]) tri $ drop 1 (cycle tri)
 --pixelLineVector :: d -> Resolution Int -> ((Int,Int),(Int,Int)) -> (Vector Int,Vector d)
 pixelLineVector :: (V.Storable d) => d -> Resolution Int -> ((Int,Int),(Int,Int)) -> (Vector Int,Vector d)
-pixelLineVector v (Area (_,ox) _) (sp,ep) = 
+pixelLineVector v (Area (_,ox) _) (sp@(x0,y0),ep@(x1,y1)) = 
 	(V.unfoldr (fmap (\((x,y),r) -> (y * ox + x,r)) . lineSeeder sp ep) (sp,getInitErr sp ep),
-	V.replicate 10 v)
+	V.replicate n v)
+		where n = max (abs (x0 - x1)) (abs (y0-y1))
 
 getInitErr :: (Int,Int) -> (Int,Int) -> Int
 getInitErr (x0,y0) (x1,y1) = (abs $ x1 - x0) - (abs $ y1 - y0)
