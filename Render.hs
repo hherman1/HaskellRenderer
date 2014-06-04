@@ -22,9 +22,9 @@ import Data.List
 import Data.Map (Map)
 import Matrix
 
-data Renderable m a = Renderable {
+data Renderable m a d = Renderable {
 	_screen :: Workspace a,
-	_col :: Color Int, 
+	_col :: d, 
 	_lineMatrix :: [m a], 
 	_triangleMatrix :: [m a]
 } deriving (Show,Eq)
@@ -58,7 +58,7 @@ perspective (ex,ey,ez) (px,py,pz) = (	ex - (ez * (px-ex)/(pz-ez)),
 -------------------
 
 
-initRenderable :: (Matrix m,Num a) => Workspace a -> Color Int -> Renderable m a
+initRenderable :: (Matrix m,Num a) => Workspace a -> Color Int -> Renderable m a d
 initRenderable scr col = Renderable scr col [] []
 
 --Triangles
@@ -67,7 +67,7 @@ triToLine :: (Matrix m) => m a -> [m a]
 triToLine mat = let tri = rows mat in zipWith (\a b -> fromList $ [a,b]) tri $ drop 1 (cycle tri)
 
 
-render :: (Matrix m, Integral b,RealFrac a) => Resolution Int -> Renderable m a -> [(b,b,Color Int)]
+render :: (Matrix m, Integral b,RealFrac a) => Resolution Int -> Renderable m a d -> [(b,b,d)]
 render out (Renderable scr col mls mtri) = 
 	optimizeGrid . sort . concat 
 	. map (renderLine col) 

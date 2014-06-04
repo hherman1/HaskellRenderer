@@ -14,13 +14,13 @@ import qualified Data.Map as ML
 import Graphics.UI.GLUT
 import Graphics.Rendering.OpenGL
 import OpenGL
-import Render
+import RenderVector
 import Matrix
 import Parser
 import Execute
 
-defaultColor :: Render.Color Int
-defaultColor = (150,150,150) 
+defaultColor :: Color3 GLubyte
+defaultColor = Color3 150 150 150 
 
 
 main :: IO ()
@@ -54,7 +54,7 @@ idleLoop = do
 				defaultArea
 				defaultColor
 	mapM_ (evalStateT (mapM_ runCommand cs)) $ 
-		map (genState renderable (windowArea winsize)) [1..100]
+		map (genState renderable (Color3 0 0 0) (windowArea winsize)) [1..100]
 	postRedisplay Nothing
 
 readInput :: String -> IO [Command]

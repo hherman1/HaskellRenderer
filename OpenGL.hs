@@ -4,7 +4,11 @@ module OpenGL
 	ScreenBuffer,
 	toSize,
 	reshape,
-	display
+	display,
+	displayVector,
+	cyan,
+	red,
+	green
 	)
 where
 
@@ -12,7 +16,14 @@ import Foreign (newArray)
 import Graphics.UI.GLUT
 import Graphics.Rendering.OpenGL
 import Data.IORef
-import Render
+import RenderVector
+
+import Data.Vector.Storable (Vector)
+import qualified Data.Vector.Storable as V
+
+cyan = Color3 0 255 255:: Color3 GLubyte
+red = Color3 255 0 0 :: Color3 GLubyte
+green = Color3 0 255 0 :: Color3 GLubyte
 
 type Vertices d = [(Int,Int,d)]
 type ScreenBuffer = Vertices (Int,Int,Int)
@@ -27,7 +38,7 @@ reshape pixels winsize = do
 	where
 		toGLint = fromIntegral . truncate
 
-toImage :: [Render.Color Int] -> IO (PixelData (Color3 GLubyte))
+toImage :: [RenderVector.Color Int] -> IO (PixelData (Color3 GLubyte))
 toImage ps = fmap (PixelData RGB UnsignedByte) $
 	newArray $
 	map (\(r,g,b) -> Color3 (toGLubyte r) (toGLubyte g) (toGLubyte b)) $
@@ -35,8 +46,27 @@ toImage ps = fmap (PixelData RGB UnsignedByte) $
 	where
 		toGLubyte :: Int -> GLubyte
 		toGLubyte = fromIntegral
+{-
+toStorable :: Vector (RenderVector.Color Int) -> IO (PixelData (Color3 GLubyte))
+toStorable v = do
+	let vec = convert $
+		V.map (\(r,g,b) -> Color3 (toGLubyte r) (toGLubyte g) (toGLubyte b)) $ v
+	VS.unsafeWith vec (return . PixelData RGB UnsignedByte)
+	where
+		toGLubyte :: Int -> GLubyte
+		toGLubyte = fromIntegral
+-}
 
-display :: Size -> [Render.Color Int] -> DisplayCallback
+
+displayVector :: (V.Storable d) => Size -> Vector d -> DisplayCallback
+displayVector size@(Size w h) ps = do
+	clear [ ColorBuffer ]
+	pixels <- V.unsafeWith ps (return . PixelData RGB UnsignedByte)
+	putStrLn $ show size
+	drawPixels size pixels
+	flush
+
+display :: Size -> [RenderVector.Color Int] -> DisplayCallback
 display size@(Size w h) ps = do
 	clear [ ColorBuffer ]
 	case ps of
