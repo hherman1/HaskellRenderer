@@ -10,6 +10,9 @@ module Render
 	render,
 	pixelsGrid,
 	optimizeGrid,
+	scaleLine,
+	inBounds,
+	triToLine,
 	cyan,
 	red,
 	green
@@ -63,7 +66,7 @@ initRenderable scr col = Renderable scr col [] []
 triToLine :: (Matrix m) => m a -> [m a]
 triToLine mat = let tri = rows mat in zipWith (\a b -> fromList $ [a,b]) tri $ drop 1 (cycle tri)
 
---renderLineMatrix :: (Matrix m,RealFrac a,Integral b) => [m a] -> Area a -> Area a -> (b,b,b) -> [(b,b,(b,b,b))]
+
 render :: (Matrix m, Integral b,RealFrac a) => Resolution Int -> Renderable m a -> [(b,b,Color Int)]
 render out (Renderable scr col mls mtri) = 
 	optimizeGrid . sort . concat 
@@ -93,6 +96,7 @@ toPixels src scale (x,y) = (	sizeToRange (xRange src) (xRange scale) x,
 				sizeToRange (yRange src) (yRange scale) y)
 	where 
 		sizeToRange (l1,h1) (l2,h2) v = l2 + ((h2-l2) * (v-l1)/(h1-l1))
+
 
 -- Bresenheim line algorithm
 pixelLine :: Integral a => d -> (a,a) -> (a,a) -> [(a,a,d)] 
