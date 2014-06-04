@@ -1,5 +1,7 @@
 vary Hunter 0 90 1 50
-cube 1 1 1 Hunter Hunter Hunter 0 0 0
+cube 1 1 1 Hunter Hunter Hunter 0 1 -10
+cube 1 1 1 Hunter Hunter Hunter 0 -1 0
 render-perspective-cyclops 0 0 10
--render-parallel
+display
+render-parallel
 display

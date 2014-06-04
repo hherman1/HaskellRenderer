@@ -1,8 +1,10 @@
 module Operations (
 	cube,
 	sphere,
+	renderParallel,
 	renderCyclops,
-	writeFile,
+	renderStereo,
+	writePPM,
 	writeFrame
 	) where
 import Matrix
@@ -17,6 +19,8 @@ import Text.Printf
 import System.IO
 
 type Tform = (Double,Double,Double)
+type Eye = Tform
+
 
 cull eye = filter (isBackface eye . rows)
 projCull eye@(ex,ey,ez) = project eye . cull [ex,ey,ez]
@@ -38,10 +42,22 @@ sphere :: (Matrix m) => Double -> Double -> Tform -> Tform -> Tform -> [m Double
 sphere rad divs s r m = (flip map) (sphereTri rad (floor divs)) 
 	$ transform (collate [scale s, rotate r, move m])
 
-renderCyclops :: (Matrix m) => Resolution Int -> Tform -> Renderable m Double -> [Color Int]
-renderCyclops out eye buffer@(Renderable scr col mls mtri) = 
+renderParallel :: (Matrix m) => Resolution Int -> Renderable m Double -> [Color Int]
+renderParallel out buffer@(Renderable scr col mls mtri) =
+	bufToPPM out $
+		(render out $ buffer {
+			_triangleMatrix = filter (parallelBackface . rows) mtri
+		})
+
+renderCyclops :: (Matrix m) => Resolution Int -> Eye -> Renderable m Double -> [Color Int]
+renderCyclops out eye buffer = 
 	bufToPPM out $ 
-		(render out $ projectGeometry eye buffer :: [(Int,Int,Color Int)])
+		(render out $ projectGeometry eye buffer)
+
+renderStereo :: (Matrix m) => Resolution Int -> (Eye,Eye) -> Renderable m Double -> [Color Int]
+renderStereo out (e1,e2) buffer = 
+	bufToPPM out $ (render out $ projectGeometry e1 buffer)
+		++ (render out $ projectGeometry e2 buffer)
 
 writePPM :: String -> Resolution Int -> [Color Int] -> IO ()
 writePPM s out buffer = do

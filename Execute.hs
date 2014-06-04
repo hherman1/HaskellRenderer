@@ -104,14 +104,22 @@ runCommand (AddVar s vv vf) = do
 		(vals,frames) = (f g vv,f (floor . g) vf)
 	modify $ \ss -> ss {_varys = ML.insertWith (++) s [Anim3D frames vals] vs}
 
+runCommand RenderParallel = do
+	RenderState {_renderable = renderable,_out = out} <- get
+	modify $ \ss -> ss {_buffer = renderParallel out renderable}
+
 runCommand (RenderCyclops e) = do
 	RenderState {_varys = vs, _fnum = fnum, 
 		_renderable = renderable,_out = out} <- get
 	let eye = getTransform (seqsVal fnum) vs e
 	modify $ \ss -> ss {_buffer = renderCyclops out eye renderable}
---TODO:
---Bring the "out" from renderable to the top level of RenderState
---pass the out as an argument to render, still consistant design
+
+runCommand (RenderStereo e1 e2) = do
+	RenderState {_varys = vs, _fnum = fnum,
+		_renderable = renderable,_out = out} <- get
+	let eye1 = getTransform (seqsVal fnum) vs e1
+	let eye2 = getTransform (seqsVal fnum) vs e2
+	modify $ \ss -> ss {_buffer = renderStereo out (eye1,eye2) renderable}
 
 runCommand Display = do
 	RenderState {_buffer = buf,_out = out} <- get

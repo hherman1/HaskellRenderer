@@ -10,7 +10,8 @@ module Matrix3D
 	toRad,
 	crossProduct,
 	normal,
-	isBackface
+	isBackface,
+	parallelBackface 
 	)
 where
 import Matrix
